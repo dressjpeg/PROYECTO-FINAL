@@ -1,0 +1,12 @@
+# Claves de WiFi: nunca se publican
+secrets.h
+
+# Modelo de terceros con «MakerWorld Exclusive License»: no redistribuir sin permiso
+Diseños 3D/MacetaInteligente.3mf
+
+# Temporales
+build/
+*.bak
+~$*
+Thumbs.db
+desktop.ini
