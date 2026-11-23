@@ -24,7 +24,7 @@ El WiFi transmite a 8,5 dBm (`DASH_POTENCIA_WIFI`): con la potencia normal titil
 | Ruta | Campos o parámetros |
 |---|---|
 | `GET /` | Página |
-| `GET /api/estado` | listo, uptime_s, hum_raw, luz_raw, hum_pct, luz_pct, indice, estado, estado_texto, frase, horas_sin_regar, avisos[] (estado, clave, texto, frase), alertas[] (estado, clave, texto, desde_s = segundos activa, inicio), resueltas[] (estado, clave, texto, inicio, fin, duracion_s), wifi_rssi, ip, hora_real, epoch, fs_ok, fs_usado, fs_total, heap_libre, heap_min, arranque |
+| `GET /api/estado` | listo, uptime_s, hum_raw, luz_raw, hum_pct, luz_pct, indice, estado, estado_texto, frase, horas_sin_regar, avisos[] (estado, clave, texto, frase), alertas[] (estado, clave, texto, desde_s = segundos activa, inicio), resueltas[] (estado, clave, texto, inicio, fin, duracion_s), wifi_rssi, ip, hora_real, epoch, fs_ok, fs_usado, fs_total, heap_libre, heap_min, arranque, estados[] (todos los avisos activos, o [4] / [5]), pers |
 | `GET /api/config` | umbrales, calibracion, tiempos, personalidad |
 | `GET /api/historial?rango=1h\|24h\|7d` | hora_real, ahora, uptime_s, arranque, campos[], datos[][]: t, hora, hum_pct, luz_pct, indice, estado, hum_raw, luz_raw, arranque |
 | `GET /api/historial.csv` | Descarga de todo el historial |

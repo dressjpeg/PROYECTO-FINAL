@@ -690,9 +690,12 @@ void apiEstado() {
   }
   sal("],\"wifi_rssi\":%d,\"ip\":\"%s\",\"hora_real\":%s,\"epoch\":%lu,", WiFi.RSSI(), WiFi.localIP().toString().c_str(),
       horaReal() ? "true" : "false", horaReal() ? (unsigned long)time(nullptr) : 0UL);
-  sal("\"fs_ok\":%s,\"fs_usado\":%lu,\"fs_total\":%lu,\"heap_libre\":%lu,\"heap_min\":%lu,\"arranque\":%u}",
+  sal("\"fs_ok\":%s,\"fs_usado\":%lu,\"fs_total\":%lu,\"heap_libre\":%lu,\"heap_min\":%lu,\"arranque\":%u,\"estados\":[",
       dashFs ? "true" : "false", (unsigned long)dashFsUsado, (unsigned long)dashFsTotal,
       (unsigned long)ESP.getFreeHeap(), (unsigned long)ESP.getMinFreeHeap(), dashArranque);
+  // Para el avatar: todos los avisos activos (o [4] / [5]) y la personalidad
+  for (int i = 0; i < nAlertas; i++) sal("%s%d", i ? "," : "", alertas[i]);
+  sal("],\"pers\":%d}", PERSONALIDAD);
   respFin();
 }
 void apiConfig() {
