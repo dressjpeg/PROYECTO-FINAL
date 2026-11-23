@@ -15,7 +15,7 @@ El índice de salud es una estimación, no una medición.
 |---|---|
 | `MacetaInteligente/maceta_inteligente/` | Firmware v3 y dashboard web ([guía y API](MacetaInteligente/maceta_inteligente/LEEME.md)) |
 | `MacetaInteligente/MacetaInteligente_v3_backup.ino` | Firmware v3 antes del dashboard |
-| `MacetaInteligente/avatar/` | Avatar animado (aún no integrado) |
+| `MacetaInteligente/avatar/` | Avatar animado original (integrado en la primera pestaña del dashboard) |
 | `Documentos/` | Roadmap, objetivos y alcance, lista de compras |
 | `Bocetos Visuales/` | Bocetos e infografía conceptuales |
 
