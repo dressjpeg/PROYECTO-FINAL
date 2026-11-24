@@ -3,6 +3,7 @@ Nunca hay dos peticiones a la vez hacia la misma maceta."""
 import logging
 import threading
 import time
+from collections import deque
 
 from . import adaptador_http as api
 
@@ -17,6 +18,7 @@ class Vigilante:
         self.ultimo = maceta["ultimo_contacto"]
         self.vivo, self.error = None, None
         self.t_hist = self.t_diario = self.t_intento_hist = None
+        self.latencias = deque(maxlen=60)   # segundos de las últimas consultas de estado
         self.generacion = 0   # cambia con la dirección: descarta respuestas de la anterior
         self.candado = threading.Lock()
 
@@ -43,7 +45,9 @@ class Vigilante:
                 return f(*a)
 
         try:
+            t0 = time.monotonic()
             e = api.estado(url)
+            self.latencias.append(time.monotonic() - t0)
             # Evita mezclar datos reales y simulados
             if bool(e.get("simulada")) != (self.base.tipo == "simulado"):
                 raise api.RespuestaInvalida(f"Esta base solo acepta macetas de tipo {self.base.tipo}")

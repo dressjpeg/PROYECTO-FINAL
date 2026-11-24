@@ -164,6 +164,11 @@ class Base:
                               (mid, did, d[0], json.dumps(dict(zip(r["campos"][1:], d[1:])))))
 
     # ----- Consultas -----
+    def config(self, did):
+        with self.con() as c:
+            f = c.execute("SELECT config FROM calibraciones WHERE dispositivo_id=? ORDER BY id DESC LIMIT 1", (did,)).fetchone()
+            return json.loads(f[0]) if f else None
+
     def lecturas(self, mid, desde=0, hasta=None, limite=5000):
         """Las más recientes del rango, en orden cronológico."""
         with self.con() as c:

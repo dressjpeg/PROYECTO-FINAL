@@ -1,0 +1,31 @@
+/* Vista general */
+.resumen{display:flex;align-items:center;gap:28px;flex-wrap:wrap;border-radius:22px;padding:22px 26px;margin-bottom:14px;border:1px solid var(--bd);background:linear-gradient(120deg,color-mix(in srgb,var(--ind) 22%,var(--sup)),color-mix(in srgb,var(--hum) 14%,var(--sup)))}
+.donas{width:150px;flex:none}.aro{fill:none;stroke-width:8;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50px 50px}
+.aro.fondo{stroke:color-mix(in srgb,var(--tx) 13%,transparent)}.aro.nivel{stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1),stroke .4s}
+.donas .real{stroke:var(--ind)}.donas .simulado{stroke:var(--simb)}
+.donas .mini,.macs svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.filas{flex:1 1 260px;display:grid;gap:16px}.fila{border-left:5px solid var(--ind);padding-left:14px}.fila.simulado{border-color:var(--simb)}.fila b{font-size:20px}
+.macs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}.macs i{width:38px;height:38px;padding:6px;border-radius:12px;border:1.5px dashed var(--tx2);color:var(--tx2);transition:.4s}
+.macs i.si{border:1.5px solid transparent;background:var(--ok);color:var(--sup)}.fila.simulado i.si{background:var(--simb);color:#fff}.macs svg{display:block}
+.macetas{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;margin:14px 0 18px}
+.planta{position:relative;background:var(--sup);border:1px solid var(--bd);border-radius:22px;padding:12px 12px 14px;text-align:center;transition:transform .25s,box-shadow .25s,border-color .25s;animation:brota .6s cubic-bezier(.2,.9,.3,1.2) calc(var(--i)*90ms) backwards}
+.planta:hover,.planta:focus-within{transform:translateY(-6px);box-shadow:0 14px 30px #0003;border-color:var(--pri)}.planta.virtual{border:2px dashed var(--simb)}
+.planta h3 a{color:inherit;text-decoration:none}.planta h3 a::after{content:"";position:absolute;inset:0;border-radius:22px}
+.planta .pc{padding:12px 12px 4px}.planta .av{max-width:170px}.planta h3{font-size:20px;margin:12px 0 2px;overflow-wrap:anywhere}.planta p{margin:4px 0}
+.meds{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 8px}.med{display:flex;flex-direction:column;align-items:center;min-width:0}.med svg{width:100%;max-width:74px}
+.med b{font-size:17px;white-space:nowrap;font-variant-numeric:tabular-nums}.med .et{font-size:13px;line-height:1.2}.med em{font-style:normal;font-weight:700;font-size:13px;color:var(--ok);margin-top:2px}.med.mal em{color:var(--mal)}
+.med.ind em{color:var(--tx2);font-weight:400}.med .ico{fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hum{--k:var(--hum)}.luz{--k:var(--luz)}.ind{--k:var(--ind)}.med .nivel,.med .ico{stroke:var(--k)}.med.mal svg{animation:late 1.6s ease-in-out infinite}
+.pto.si{display:inline-flex;gap:4px}.planta .pto.si{animation:vivo 2.4s ease-in-out infinite}.planta.off .meds{opacity:.45}
+/* Detalle */
+.retrato{border-radius:22px;padding:18px;text-align:center;border:1px solid var(--bd);background:linear-gradient(150deg,color-mix(in srgb,var(--ind) 22%,var(--sup)),color-mix(in srgb,var(--hum) 14%,var(--sup)))}
+.virtual .retrato{border:2px dashed var(--simb)}.retrato h2{margin:0 0 2px;font-size:24px}.retrato .av{max-width:290px}#dFrase{font-size:19px}
+.medida{background:var(--sup);border:1px solid var(--bd);border-radius:22px;padding:16px 12px;text-align:center;transition:transform .25s,box-shadow .25s;animation:brota .6s cubic-bezier(.2,.9,.3,1.2) calc(var(--i)*80ms) backwards}
+.medida:hover{transform:translateY(-4px);box-shadow:0 10px 24px #0003}.medida.ind{border-style:dashed}.medida.mal{border-color:var(--mal)}
+.medida h3{margin:0 0 8px}.medida.med svg{max-width:118px}.medida.med b{font-size:30px;margin-top:4px}.medida.med em{font-size:16px}.medida .alerta{color:var(--mal);font-weight:700;font-size:14px}.medida p:empty,.medida em:empty{display:none}.medida .tag{margin-top:auto}
+.temp{--k:#d0562b}.riego{--k:var(--ok)}.disco{fill:color-mix(in srgb,var(--k) 16%,transparent)}
+@keyframes brota{from{transform:translateY(30px) scale(.92)}}@keyframes late{50%{transform:scale(1.09)}}@keyframes vivo{50%{opacity:.6}}
+@media(max-width:500px){.resumen{justify-content:center;padding:18px}}
+@media(prefers-reduced-motion:reduce){.planta,.medida,.med svg,.pto.si{animation:none!important}.planta,.medida,.aro.nivel{transition:none}}
+.dos:has(#dMed:empty){grid-template-columns:1fr}
+#dMed{display:flex;flex-wrap:wrap}#dMed .medida{flex:1 1 190px}

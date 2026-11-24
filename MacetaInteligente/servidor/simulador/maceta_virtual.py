@@ -49,7 +49,9 @@ class Simulacion:
                 "horas_sin_regar": 12, "avisos": [{**item(k), "frase": FRASE[k]} for k in av],
                 "alertas": [{**item(k), "desde_s": 3600, "inicio": t - 3600} for k in av], "resueltas": [],
                 "wifi_rssi": -55, "ip": "127.0.0.1", "hora_real": True, "epoch": t, "fs_ok": True, "fs_usado": 60000,
-                "fs_total": 1441792, "heap_libre": 180000, "heap_min": 150000, "arranque": 1, "estados": x["av"], "pers": 0}
+                "fs_total": 1441792, "heap_libre": 180000, "heap_min": 150000, "arranque": 1, "estados": x["av"], "pers": 0,
+                # Sensores futuros (BH1750 y SHT31): solo existen en las virtuales
+                "luz_lx": round(10 ** (x["l"] / 20)), "temp_c": round(23 + 3 * math.sin(t / 9000), 1)}
 
     def config(self):
         return {"simulada": True,

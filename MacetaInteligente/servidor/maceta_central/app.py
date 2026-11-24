@@ -1,12 +1,16 @@
-"""API del servidor central."""
+"""API del servidor central y dashboard. Atiende una base real y, si se pide, otra simulada."""
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
+from . import capacidad as cap
 from .adaptador_http import validar_url
-from .base import Conflicto
+from .base import Conflicto, calidad
 from .ingesta import Ingesta
 
 
@@ -22,11 +26,19 @@ class Direccion(BaseModel):
 class NuevaMaceta(Direccion):
     nombre: str = Field(min_length=1, max_length=60)
     especie: str = Field("", max_length=80)
+    origen: Literal["real", "simulado"] | None = None   # None = la base principal
 
     @field_validator("nombre", "especie", mode="before")
     @classmethod
     def _limpio(cls, v):
         return v.strip() if isinstance(v, str) else v
+
+
+class ConfigCapacidad(BaseModel):
+    red: str = Field(min_length=1, max_length=60)
+    limite_wifi: int | None = Field(None, ge=1, le=1000)
+    otros_equipos: int = Field(1, ge=0, le=1000)
+    anios: int = Field(3, ge=1, le=20)
 
 
 def permitido(x_maceta: str = Header("")):
@@ -35,72 +47,98 @@ def permitido(x_maceta: str = Header("")):
         raise HTTPException(403, "Falta la cabecera X-Maceta")
 
 
-def crear_app(base, consultar=True):
-    ing = Ingesta(base)
+def crear_app(*bases, consultar=True):
+    ings = {b.tipo: Ingesta(b) for b in bases}
 
     @asynccontextmanager
     async def vida(_):
         if consultar:
-            ing.sincronizar()
+            for i in ings.values():
+                i.sincronizar()
         yield
-        ing.parar.set()
+        for i in ings.values():
+            i.parar.set()
 
     # Sin /docs: cargaría archivos de internet
     app = FastAPI(title="Maceta central", lifespan=vida, docs_url=None, redoc_url=None, openapi_url=None)
 
-    def resumen(m):
-        v = ing.vigilantes.get(m["id"])
-        return {**m, "origen": base.tipo, "conectada": bool(v and v.conectada),
-                "error": v.error if v else None, "vivo": v.vivo if v and v.conectada else None}
+    @app.middleware("http")
+    async def sin_cache(pedido, seguir):
+        r = await seguir(pedido)
+        r.headers["Cache-Control"] = "no-cache"
+        return r
+
+    def resumen(base, m):
+        v = ings[base.tipo].vigilantes.get(m["id"])
+        vivo = v.vivo if v and v.conectada else None
+        return {**m, "origen": base.tipo, "conectada": bool(vivo), "error": v.error if v else None, "vivo": vivo,
+                "calidad": calidad(vivo["hum_raw"], vivo["luz_raw"]).split(",") if vivo else []}
 
     def buscar(mid):
-        for m in base.macetas():
-            if m["id"] == mid:
-                return m
+        for b in bases:
+            for m in b.macetas():
+                if m["id"] == mid:
+                    return b, m
         raise HTTPException(404, "No existe esa maceta")
 
     @app.get("/api/v1/salud")
     def salud():
-        return {"ok": True, "tipo": base.tipo, "hora": int(time.time())}
+        return {"ok": True, "tipos": list(ings), "hora": int(time.time())}
 
     @app.get("/api/v1/macetas")
     def listar():
-        return [resumen(m) for m in base.macetas()]
+        return [resumen(b, m) for b in bases for m in b.macetas()]
 
     @app.post("/api/v1/macetas", status_code=201, dependencies=[Depends(permitido)])
     def crear(n: NuevaMaceta):
+        tipo = n.origen or bases[0].tipo
+        if tipo not in ings:
+            raise HTTPException(400, f"Este servidor no admite macetas de tipo {tipo}")
         try:
-            mid = base.crear_maceta(n.nombre, n.url, n.especie)
+            mid = ings[tipo].base.crear_maceta(n.nombre, n.url, n.especie)
         except Conflicto as e:
             raise HTTPException(409, str(e))
         if consultar:
-            ing.sincronizar()
+            ings[tipo].sincronizar()
         return {"id": mid}
 
     @app.get("/api/v1/macetas/{mid}")
     def una(mid: str):
-        return resumen(buscar(mid))
+        b, m = buscar(mid)
+        return {**resumen(b, m), "config": b.config(m["dispositivo_id"])}
 
     @app.patch("/api/v1/macetas/{mid}/direccion", dependencies=[Depends(permitido)])
     def direccion(mid: str, d: Direccion):
-        buscar(mid)
+        b, _ = buscar(mid)
         try:
-            base.cambiar_url(mid, d.url)
+            b.cambiar_url(mid, d.url)
         except Conflicto as e:
             raise HTTPException(409, str(e))
-        if mid in ing.vigilantes:
-            ing.vigilantes[mid].cambiar_url(d.url)
+        v = ings[b.tipo].vigilantes.get(mid)
+        if v:
+            v.cambiar_url(d.url)
         return {"ok": True}
 
     @app.get("/api/v1/macetas/{mid}/lecturas")
     def lecturas(mid: str, desde: int = Query(0, ge=0, le=2**40), hasta: int | None = Query(None, ge=0, le=2**40),
                  limite: int = Query(5000, ge=1, le=20000)):
-        buscar(mid)
-        return base.lecturas(mid, desde, hasta, limite)
+        return buscar(mid)[0].lecturas(mid, desde, hasta, limite)
 
     @app.get("/api/v1/macetas/{mid}/diario")
     def diario(mid: str):
-        buscar(mid)
-        return base.diario(mid)
+        return buscar(mid)[0].diario(mid)
 
+    @app.get("/api/v1/capacidad")
+    def capacidad():
+        reales = [resumen(b, m) for b in bases if b.tipo == "real" for m in b.macetas()]
+        vs = ings["real"].vigilantes.values() if "real" in ings else []
+        return cap.calcular(bases, sum(m["conectada"] for m in reales), len(reales),
+                            [x for v in list(vs) for x in list(v.latencias)])
+
+    @app.put("/api/v1/capacidad", dependencies=[Depends(permitido)])
+    def config_capacidad(c: ConfigCapacidad):
+        cap.guardar_config(bases[0], c.model_dump())
+        return {"ok": True}
+
+    app.mount("/", StaticFiles(directory=Path(__file__).parent / "web", html=True))
     return app

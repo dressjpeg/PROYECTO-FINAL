@@ -215,11 +215,55 @@ def test_api(base):
     assert c.get("/api/v1/macetas/x/lecturas").status_code == 404
 
 
+def test_real_y_simulada_en_un_servidor(base, sim):
+    c, h = TestClient(crear_app(base, sim, consultar=False)), {"X-Maceta": "1"}
+    r = c.post("/api/v1/macetas", json={"nombre": "R", "url": "10.0.0.5"}, headers=h).json()["id"]
+    s = c.post("/api/v1/macetas", json={"nombre": "S", "url": "10.0.0.6", "origen": "simulado"}, headers=h).json()["id"]
+    assert {m["id"]: m["origen"] for m in c.get("/api/v1/macetas").json()} == {r: "real", s: "simulado"}
+    assert [m["nombre"] for m in base.macetas()] == ["R"] and [m["nombre"] for m in sim.macetas()] == ["S"]
+    assert c.get(f"/api/v1/macetas/{s}").json()["config"] is None
+    solo = TestClient(crear_app(base, consultar=False))
+    assert solo.post("/api/v1/macetas", json={"nombre": "S", "url": "10.0.0.7", "origen": "simulado"}, headers=h).status_code == 400
+
+
+def test_dashboard_sin_recursos_externos(base):
+    c = TestClient(crear_app(base, consultar=False))
+    for f in ("/", "/app.js", "/jardin.js", "/jardin.css", "/escala.js", "/escala.css", "/grafica.js", "/avatar.js", "/estilo.css", "/avatar.css"):
+        r = c.get(f)
+        assert r.status_code == 200
+        assert not re.search(r"(src|href)=[\"']?(https?:)?//|@import|url\(\s*[\"']?http", r.text), f
+
+
 @pytest.mark.parametrize("u", ["https://10.0.0.1", "http://8.8.8.8", "http://10.0.0.1/x", "http://a:b@10.0.0.1",
                                "file:///c:/x", "http://0.0.0.0", "http://10.0.0.1:99999", "", "http://[::1"])
 def test_url_rechazada(u):
     with pytest.raises(ValueError):
         api.validar_url(u)
+
+
+# ----- Capacidad -----
+def test_capacidad(base, sim, tmp_path):
+    c, h = TestClient(crear_app(base, sim, consultar=False)), {"X-Maceta": "1"}
+    alta(base)
+    for i in range(4):
+        alta(sim, f"http://127.0.0.1:{9100 + i}")
+    d = c.get("/api/v1/capacidad").json()
+    assert d["capacidad"] is None and d["registradas"] == 1 and d["conectadas"] == 0   # sin dato de WiFi no se inventa
+    cfg = {"red": "Hotspot", "limite_wifi": 6, "otros_equipos": 1, "anios": 3}
+    assert c.put("/api/v1/capacidad", json=cfg).status_code == 403
+    assert c.put("/api/v1/capacidad", json={**cfg, "limite_wifi": 0}, headers=h).status_code == 422
+    assert c.put("/api/v1/capacidad", json=cfg, headers=h).status_code == 200
+    d = c.get("/api/v1/capacidad").json()
+    assert (d["capacidad"], d["disponible"], d["limitante"]) == (5, 4, "Red WiFi")
+    (tmp_path / "carga.json").write_text('{"fecha":1,"niveles":[{"macetas":3,"ok":true},{"macetas":9,"ok":false}]}')
+    d = c.get("/api/v1/capacidad").json()
+    assert (d["capacidad"], d["limitante"]) == (3, "Servidor y base de datos")
+    (tmp_path / "carga.json").write_text("roto")
+    assert c.get("/api/v1/capacidad").json()["capacidad"] == 5
+    for i in range(6):
+        alta(base, f"http://10.0.1.{i + 1}")
+    d = c.get("/api/v1/capacidad").json()
+    assert d["excedida"] and d["disponible"] == 0
 
 
 # ----- Línea base: el firmware sigue ofreciendo lo mismo -----
@@ -253,7 +297,7 @@ def test_virtual_igual_que_firmware():
                 r |= de(v)
         return r
     anidadas = {"clave", "texto", "desde_s", "inicio", "fin", "duracion_s"}
-    assert de(s.estado()) - {"simulada"} == claves("apiEstado") - anidadas
+    assert de(s.estado()) - {"simulada", "luz_lx", "temp_c"} == claves("apiEstado") - anidadas
     assert de(s.config()) - {"simulada"} == claves("apiConfig")
     for f, campos in (("apiHistorial", CAMPOS), ("apiDiario", CAMPOS_DIA)):
         assert all(f'\\"{x}\\"' in funcion(f) for x in campos)
