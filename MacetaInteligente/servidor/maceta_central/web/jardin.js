@@ -26,17 +26,17 @@ function nivel(c,pct){c.style.strokeDashoffset=100-Math.max(0,Math.min(100,pct))
 
 function crear(m){
  const e=document.createElement('div');e.className='planta'+(m.origen=='simulado'?' virtual':'');e.setAttribute('role','listitem');
- e.innerHTML='<div class="escena"></div><h3><a href="#m/'+m.id+'"></a></h3><p class="et esp"></p><p class="tg2"></p><div class="meds">'+['hum','luz','ind'].map(anillo).join('')+'</div><p class="pie et"></p>';
+ e.innerHTML='<button class="basura" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg></button><div class="escena"></div><h3><a href="#m/'+m.id+'"></a></h3><p class="et esp"></p><p class="tg2"></p><div class="meds">'+['hum','luz','ind'].map(anillo).join('')+'</div><p class="pie et"></p>';
  molde=molde||$('av').parentNode.cloneNode(true);
  const pc=molde.cloneNode(true),av=pc.querySelector('svg');av.removeAttribute('id');av.querySelector('defs').remove();
- e.firstChild.append(pc);e._av=av;return e;
+ e.querySelector('.escena').append(pc);e.querySelector('.basura').onclick=()=>pideBorrar(m.id);e._av=av;return e;
 }
 function actualizar(e,m){
  const v=m.vivo,ok=m.conectada&&v.listo,L=mediciones(m),q=s=>e.querySelector(s);
  e.classList.toggle('off',!m.conectada);
  setAvatar(ok?v.estados||[v.estado]:[],ok?v.pers:null,ok,e._av);
  if(m.conectada&&!ok)q('.bd').textContent='Leyendo…';
- q('h3 a').textContent=m.nombre;q('.esp').textContent=m.especie;q('.esp').hidden=!m.especie;
+ q('h3 a').textContent=m.nombre;q('.basura').setAttribute('aria-label','Borrar '+m.nombre);q('.esp').textContent=m.especie;q('.esp').hidden=!m.especie;
  const t=tags(m);if(e._tags!==t){e._tags=t;q('.tg2').innerHTML=t}
  for(const k of['hum','luz','ind']){
   const x=L.find(y=>y.col==k),c=q('.med.'+k),b=c.querySelector('b');nivel(c.querySelector('.nivel'),x?x.bar:0);

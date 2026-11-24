@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
 from . import capacidad as cap
+from . import fotos
 from .adaptador_http import validar_url
 from .base import Conflicto, calidad
 from .ingesta import Ingesta
@@ -71,7 +72,7 @@ def crear_app(*bases, consultar=True):
     def resumen(base, m):
         v = ings[base.tipo].vigilantes.get(m["id"])
         vivo = v.vivo if v and v.conectada else None
-        return {**m, "origen": base.tipo, "conectada": bool(vivo), "error": v.error if v else None, "vivo": vivo,
+        return {**m, "fotos": fotos.hay(base, m["id"]), "origen": base.tipo, "conectada": bool(vivo), "error": v.error if v else None, "vivo": vivo,
                 "calidad": calidad(vivo["hum_raw"], vivo["luz_raw"]).split(",") if vivo else []}
 
     def buscar(mid):
@@ -119,6 +120,16 @@ def crear_app(*bases, consultar=True):
             v.cambiar_url(d.url)
         return {"ok": True}
 
+    @app.delete("/api/v1/macetas/{mid}", dependencies=[Depends(permitido)])
+    def borrar(mid: str, nombre: str = ""):
+        b, m = buscar(mid)
+        # Con historial hay que escribir el nombre: evita borrar la maceta equivocada
+        if (m["lecturas"] or fotos.hay(b, mid)) and nombre.strip() != m["nombre"]:
+            raise HTTPException(409, "Escribe el nombre exacto de la maceta para borrarla")
+        r = ings[b.tipo].borrar(mid)
+        fotos.archivar(b, mid)
+        return {"ok": True, "respaldo": r}
+
     @app.get("/api/v1/macetas/{mid}/lecturas")
     def lecturas(mid: str, desde: int = Query(0, ge=0, le=2**40), hasta: int | None = Query(None, ge=0, le=2**40),
                  limite: int = Query(5000, ge=1, le=20000)):
@@ -140,5 +151,6 @@ def crear_app(*bases, consultar=True):
         cap.guardar_config(bases[0], c.model_dump())
         return {"ok": True}
 
+    fotos.registrar(app, bases, buscar, permitido)
     app.mount("/", StaticFiles(directory=Path(__file__).parent / "web", html=True))
     return app

@@ -19,6 +19,7 @@ class Vigilante:
         self.vivo, self.error = None, None
         self.t_hist = self.t_diario = self.t_intento_hist = None
         self.latencias = deque(maxlen=60)   # segundos de las últimas consultas de estado
+        self.activo = True
         self.generacion = 0   # cambia con la dirección: descarta respuestas de la anterior
         self.candado = threading.Lock()
 
@@ -26,6 +27,11 @@ class Vigilante:
         with self.candado:
             self.url, self.vivo, self.t_hist, self.t_diario, self.t_intento_hist = url, None, None, None, None
             self.ultimo = None
+            self.generacion += 1
+
+    def detener(self):
+        with self.candado:   # desde aquí ya no escribe nada
+            self.activo = False
             self.generacion += 1
 
     def rango(self):
@@ -93,8 +99,15 @@ class Ingesta:
                     v = self.vigilantes[m["id"]] = Vigilante(self.base, m)
                     threading.Thread(target=self._bucle, args=(v,), daemon=True).start()
 
+    def borrar(self, mid):
+        with self.candado:
+            v = self.vigilantes.pop(mid, None)
+            if v:
+                v.detener()
+            return self.base.borrar_maceta(mid)
+
     def _bucle(self, v):
-        while not self.parar.is_set():
+        while v.activo and not self.parar.is_set():
             t = time.monotonic()
             try:
                 v.ciclo()

@@ -57,6 +57,8 @@ def calidad(hum_raw, luz_raw):
 
 
 class Base:
+    tablas_extra = ()   # tablas de otros módulos con maceta_id (por ejemplo, fotos)
+
     def __init__(self, ruta, tipo="real"):
         self.ruta, self.tipo = Path(ruta), tipo
         self.ruta.parent.mkdir(parents=True, exist_ok=True)
@@ -100,6 +102,28 @@ class Base:
         except sqlite3.IntegrityError as e:
             raise Conflicto("Ya hay una maceta con esa dirección") from e
         return n > 0
+
+    def borrar_maceta(self, mid):
+        """Borra la maceta y todos sus datos. Antes copia la base completa en respaldos/."""
+        carpeta = self.ruta.parent / "respaldos"
+        carpeta.mkdir(exist_ok=True)
+        copia = carpeta / f"{self.tipo}-{time.strftime('%Y%m%d-%H%M%S')}-{mid[:8]}.db"
+        with self.con() as c:
+            d = sqlite3.connect(copia)
+            try:
+                c.backup(d)
+            finally:
+                d.close()
+        with self.con() as c:
+            ds = [f[0] for f in c.execute("SELECT dispositivo_id FROM asignaciones WHERE maceta_id=?", (mid,))]
+            for t in self.tablas_extra + ("lecturas", "diario", "asignaciones"):
+                c.execute(f"DELETE FROM {t} WHERE maceta_id=?", (mid,))
+            for x in ds:     # solo si ninguna otra maceta usó ese dispositivo
+                if not c.execute("SELECT 1 FROM asignaciones WHERE dispositivo_id=?", (x,)).fetchone():
+                    c.execute("DELETE FROM calibraciones WHERE dispositivo_id=?", (x,))
+                    c.execute("DELETE FROM dispositivos WHERE id=?", (x,))
+            c.execute("DELETE FROM macetas WHERE id=?", (mid,))
+        return copia.name
 
     def macetas(self):
         with self.con() as c:

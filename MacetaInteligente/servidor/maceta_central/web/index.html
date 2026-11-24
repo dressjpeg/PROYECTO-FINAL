@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Macetas inteligentes</title><link rel="icon" href="data:,">
-<link rel="stylesheet" href="avatar.css"><link rel="stylesheet" href="estilo.css"><link rel="stylesheet" href="jardin.css"><link rel="stylesheet" href="escala.css"></head><body>
+<link rel="stylesheet" href="avatar.css"><link rel="stylesheet" href="estilo.css"><link rel="stylesheet" href="jardin.css"><link rel="stylesheet" href="escala.css"><link rel="stylesheet" href="fotos.css"></head><body>
 <header><h1><a href="#">Macetas inteligentes</a></h1><nav aria-label="Secciones"><a href="#" id="navM">Jardín</a><a href="#cap" id="navC">Escalabilidad</a></nav><span id="con" role="status">Conectando…</span></header>
 <main>
 <section id="lista">
@@ -31,10 +31,23 @@
  <div class="c"><h3>Humedad del suelo (%) <span class="tag procH"></span></h3><canvas id="ch" height="190"></canvas></div>
  <div class="c"><h3>Nivel de luz (%) <span class="tag procH"></span></h3><canvas id="cl" height="190"></canvas></div>
  <div class="c est"><h3>Índice de salud (/100) <span class="tag">Estimado</span></h3><canvas id="ci" height="190"></canvas></div>
+ <h2>Fotos del crecimiento</h2>
+ <div class="c"><div class="acc"><button class="p" type="button" id="fTomar" style="margin:0">Tomar foto</button><button type="button" id="fSubir">Subir fotos</button><button type="button" id="fPap" aria-pressed="false">Ver papelera</button></div>
+  <input type="file" id="fArch" accept="image/jpeg,image/png,image/webp" multiple hidden><input type="file" id="fCam" accept="image/*" capture="environment" hidden>
+  <p id="fMsg" role="status"></p>
+  <details><summary>Datos de la foto (opcional)</summary><p class="et">Escríbelos antes de tomarla o subirla. Se registran a mano.</p>
+   <label for="fAlt">Altura (cm)</label><input id="fAlt" inputmode="decimal" placeholder="12,5"><label for="fHoj">Número de hojas</label><input id="fHoj" type="number" min="0" max="999">
+   <label for="fNota">Nota</label><input id="fNota" maxlength="200"><label for="fCuando">Fecha y hora (vacío: automática)</label><input id="fCuando" type="datetime-local"></details>
+  <div class="filtro"><label for="fD">Desde<input id="fD" type="date"></label><label for="fH">Hasta<input id="fH" type="date"></label></div>
+  <p class="et" id="fCuenta"></p><div class="album" id="album"></div></div>
+ <div class="c" id="compara" hidden><h3>Comparar crecimiento</h3><div class="filtro"><label for="cA1">Antes<select id="cA1"></select></label><label for="cB1">Después<select id="cB1"></select></label></div>
+  <div class="comp" id="comp"><img id="iA" alt=""><img id="iB" class="b" alt=""><b id="cmA"></b><b id="cmB"></b></div>
+  <label for="cX">Mueve para comparar</label><input id="cX" type="range" min="0" max="100" value="50"><p id="cTxt"></p></div>
  <details class="c"><summary>Datos técnicos</summary><table><tbody id="dTec"></tbody></table></details>
  <details class="c"><summary>Conexión</summary>
   <p id="dProp"></p>
   <form id="dir"><label for="dU">Dirección en la red local</label><input id="dU" maxlength="200" required><p class="et">Verifica que la dirección sea de esta maceta: el prototipo 1 no informa un identificador.</p><button class="p">Cambiar dirección</button><p id="dirMsg" role="status"></p></form></details>
+ <button class="peligro" id="dBorrar">Borrar esta maceta</button>
 </section>
 <section id="capacidad" hidden>
  <h2>Escalabilidad</h2><p class="et">Solo cuentan las macetas reales: las simuladas corren en este PC y no ocupan la red.</p><p id="capError" class="aviso" hidden></p>
@@ -49,5 +62,12 @@
   <button class="p">Guardar</button><p id="capMsg" role="status"></p></form></details>
 </section>
 </main>
-<script src="grafica.js"></script><script src="avatar.js"></script><script src="jardin.js"></script><script src="escala.js"></script><script src="app.js"></script>
+<dialog id="camara" class="ancho" aria-label="Tomar foto"><div class="cam"><video id="cVideo" autoplay playsinline muted></video><img id="cGuia" alt="" hidden></div>
+ <div id="cGuiaC"><label for="cOp">Silueta de la última foto, para repetir el ángulo</label><input id="cOp" type="range" min="0" max="70" value="30"></div>
+ <p id="cMsg" role="status"></p><div class="acciones"><button type="button" id="cNo">Cancelar</button><button type="button" class="p" id="cSi" style="margin:0">Capturar</button></div></dialog>
+<dialog id="visor" class="ancho" aria-labelledby="vT"><h2 id="vT"></h2><img id="vImg" alt=""><p id="vTxt"></p><p id="vMsg" role="status"></p><div class="acciones"><button type="button" id="vDel"></button><button type="button" class="p" id="vNo" style="margin:0">Cerrar</button></div></dialog>
+<dialog id="borrar" aria-labelledby="bT"><form id="bForm"><h2 id="bT"></h2><p id="bTxt"></p>
+ <div id="bNom"><label for="bN">Escribe el nombre para confirmar</label><input id="bN" autocomplete="off"></div>
+ <p id="bMsg" role="status"></p><div class="acciones"><button type="button" id="bNo">Cancelar</button><button class="peligro" id="bSi">Borrar</button></div></form></dialog>
+<script src="grafica.js"></script><script src="avatar.js"></script><script src="jardin.js"></script><script src="escala.js"></script><script src="fotos.js"></script><script src="borrar.js"></script><script src="app.js"></script>
 </body></html>

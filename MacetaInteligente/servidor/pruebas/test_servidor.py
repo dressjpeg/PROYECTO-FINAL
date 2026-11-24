@@ -228,7 +228,7 @@ def test_real_y_simulada_en_un_servidor(base, sim):
 
 def test_dashboard_sin_recursos_externos(base):
     c = TestClient(crear_app(base, consultar=False))
-    for f in ("/", "/app.js", "/jardin.js", "/jardin.css", "/escala.js", "/escala.css", "/grafica.js", "/avatar.js", "/estilo.css", "/avatar.css"):
+    for f in ("/", "/app.js", "/jardin.js", "/jardin.css", "/borrar.js", "/fotos.js", "/fotos.css", "/escala.js", "/escala.css", "/grafica.js", "/avatar.js", "/estilo.css", "/avatar.css"):
         r = c.get(f)
         assert r.status_code == 200
         assert not re.search(r"(src|href)=[\"']?(https?:)?//|@import|url\(\s*[\"']?http", r.text), f
@@ -239,6 +239,41 @@ def test_dashboard_sin_recursos_externos(base):
 def test_url_rechazada(u):
     with pytest.raises(ValueError):
         api.validar_url(u)
+
+
+# ----- Borrar -----
+def test_borrar_maceta(base):
+    c, h = TestClient(crear_app(base, consultar=False)), {"X-Maceta": "1"}
+    a, b = alta(base), alta(base, "http://10.0.0.6", "Otra")
+    for m in (a, b):
+        base.guardar_config(m["dispositivo_id"], {"x": 1}, T0)
+        guardar(base, m, hist(fila(T0 - 300, 1)))
+    u = f"/api/v1/macetas/{a['id']}"
+    assert c.delete(u).status_code == 403
+    assert c.delete(u, headers=h).status_code == 409 and len(base.macetas()) == 2
+    assert c.delete(u, headers=h, params={"nombre": "Otra"}).status_code == 409
+    r = c.delete(u, headers=h, params={"nombre": "M"}).json()
+    assert [m["nombre"] for m in base.macetas()] == ["Otra"] and len(todas(base)) == 1
+    copia = Base(base.ruta.parent / "respaldos" / r["respaldo"])
+    assert len(copia.macetas()) == 2 and len(todas(copia)) == 2
+    assert c.delete(u, headers=h).status_code == 404
+    v = alta(base, a["url"], "Vacía")   # la dirección queda libre y sin historial no pide nombre
+    assert c.delete(f"/api/v1/macetas/{v['id']}", headers=h).status_code == 200
+
+
+def test_borrar_durante_una_consulta(sim, virtual, monkeypatch):
+    m = alta(sim, virtual)
+    ing = Ingesta(sim)
+    v = ing.vigilantes[m["id"]] = Vigilante(sim, m)
+    orig = api.historial
+
+    def lento(url, rango):
+        r = orig(url, rango)
+        ing.borrar(m["id"])
+        return r
+    monkeypatch.setattr(api, "historial", lento)
+    assert not v.ciclo() and not v.activo
+    assert sim.macetas() == [] and todas(sim) == []
 
 
 # ----- Capacidad -----

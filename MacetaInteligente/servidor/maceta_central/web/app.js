@@ -69,7 +69,7 @@ async function cargaHist(){
 function ruta(){
  const m=/^#m\/([\w-]+)$/.exec(location.hash);actual=m?m[1]:null;vista=actual?'det':location.hash=='#cap'?'cap':'lista';det=null;nHist++;capCfg=false;
  $('lista').hidden=vista!='lista';$('capacidad').hidden=vista!='cap';[['navM','lista'],['navC','cap']].forEach(([i,v])=>v==vista?$(i).setAttribute('aria-current','page'):$(i).removeAttribute('aria-current'));$('detalle').hidden=!actual;scrollTo(0,0);
- if(actual){limpiaGraficas();$('hMsg').textContent='Cargando…';$('dirMsg').textContent='';const x=macetas.find(q=>q.id==actual);$('dU').value=x?x.url:'';pintaDetalle();cargaHist()}else vista=='cap'?pintaCap():pintaLista();
+ if(actual){limpiaGraficas();$('hMsg').textContent='Cargando…';$('dirMsg').textContent='';const x=macetas.find(q=>q.id==actual);$('dU').value=x?x.url:'';pintaDetalle();cargaHist();abreFotos()}else vista=='cap'?pintaCap():pintaLista();
 }
 const pinta=()=>vista=='det'?pintaDetalle():vista=='cap'?pintaCap():pintaLista();
 async function refresca(){
