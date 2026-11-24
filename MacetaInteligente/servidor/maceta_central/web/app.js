@@ -8,7 +8,8 @@ let macetas=[],tipos=[],actual=null,vista='lista',det=null,rango=86400,nHist=0,n
 async function pide(u,o={}){
  const c=new AbortController(),t=setTimeout(()=>c.abort(),15000);
  try{
-  const r=await fetch(u,{method:o.m||'GET',signal:c.signal,headers:o.m?{'X-Maceta':'1','Content-Type':'application/json'}:{},body:o.b&&JSON.stringify(o.b)}),j=await r.json();
+  const r=await fetch(u,{method:o.m||'GET',signal:c.signal,headers:o.m?{'X-Maceta':'1','Content-Type':'application/json'}:{'X-Maceta':'1'},body:o.b&&JSON.stringify(o.b)}),j=await r.json();
+  if(r.status==401)location.href='/entrar';
   if(!r.ok)throw new Error(typeof j.detail=='string'?j.detail:Array.isArray(j.detail)?j.detail.map(d=>d.msg.replace('Value error, ','')).join('. '):'Error '+r.status);
   return j;
  }catch(e){throw e.name=='AbortError'||e instanceof TypeError?new Error('Sin conexión con el servidor central'):e}finally{clearTimeout(t)}
@@ -43,8 +44,8 @@ function pintaDetalle(){
  setAvatar(ok?v.estados||[v.estado]:[],ok?v.pers:null,ok);$('dFrase').textContent=ok?'«'+v.frase+'»':'';
  pintaMedidas(m);$('detalle').classList.toggle('virtual',m.origen=='simulado');
  const c=det&&det.id==actual&&det.config,F=[['Lecturas guardadas en el servidor',num(m.lecturas,0)]];
- if(ok)F.push(['Humedad, lectura cruda',v.hum_raw+' cuentas ADC (0–4095)'],['Luz, lectura cruda',v.luz_raw+' cuentas ADC (0–4095)'],['Señal WiFi',v.wifi_rssi+' dBm'],['Encendida hace',dur(v.uptime_s)],['Hora de internet en la maceta',v.hora_real?'Sí':'No'],['RAM libre',num(v.heap_libre/1024)+' KB'],['Almacenamiento usado',num(v.fs_usado/1024,0)+' de '+num(v.fs_total/1024,0)+' KB']);
- if(c){const u=c.umbrales,k=c.calibracion;F.push(['Seca por debajo de',u.sed+' %'],['Encharcada por encima de',u.encharcada+' %'],['Poca luz por debajo de',u.poca_luz+' %'],['Mucha luz por encima de',u.mucha_luz+' %'],['Estresada por debajo de',u.estres+'/100'],['Calibración de humedad (seco / húmedo)',k.hum_seco+' / '+k.hum_humedo+' cuentas ADC'],['Calibración de luz (oscuro / claro)',k.luz_oscuro_log+' / '+k.luz_claro_log+' cuentas ADC'])}
+ if(ok&&v.uptime_s!=null)F.push(['Humedad, lectura cruda',v.hum_raw+' cuentas ADC (0–4095)'],['Luz, lectura cruda',v.luz_raw+' cuentas ADC (0–4095)'],['Señal WiFi',v.wifi_rssi+' dBm'],['Encendida hace',dur(v.uptime_s)],['Hora de internet en la maceta',v.hora_real?'Sí':'No'],['RAM libre',num(v.heap_libre/1024)+' KB'],['Almacenamiento usado',num(v.fs_usado/1024,0)+' de '+num(v.fs_total/1024,0)+' KB']);
+ if(c&&c.calibracion){const u=c.umbrales,k=c.calibracion;F.push(['Seca por debajo de',u.sed+' %'],['Encharcada por encima de',u.encharcada+' %'],['Poca luz por debajo de',u.poca_luz+' %'],['Mucha luz por encima de',u.mucha_luz+' %'],['Estresada por debajo de',u.estres+'/100'],['Calibración de humedad (seco / húmedo)',k.hum_seco+' / '+k.hum_humedo+' cuentas ADC'],['Calibración de luz (oscuro / claro)',k.luz_oscuro_log+' / '+k.luz_claro_log+' cuentas ADC'])}
  poner('dTec',F.map(([a,b])=>'<tr><td>'+esc(a)+'</td><td>'+esc(b)+'</td></tr>').join(''));
  poner('dProp',m.origen=='real'?'<a href="'+esc(m.url)+'" target="_blank" rel="noopener">Abrir el dashboard propio de esta maceta</a>':'Las macetas simuladas no tienen dashboard propio.');
 }

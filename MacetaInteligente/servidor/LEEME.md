@@ -8,7 +8,23 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements-dev.txt
 .venv\Scripts\python -m maceta_central
 ```
-Abre `http://127.0.0.1:8000`. Por ahora solo responde en este PC: para verlo en el celular falta una contraseña.
+Abre `http://127.0.0.1:8000`. Sin `--red` solo responde en este PC.
+
+### Desde el celular
+```powershell
+.venv\Scripts\python -m maceta_central --demo --red
+```
+Conecta el PC al hotspot del celular; en el PC, «Abrir en el celular» muestra la dirección (`http://IP-del-PC:8000`). Ábrela en el celular: no pide código.
+
+Entra cualquiera que esté en esa red y la conexión no va cifrada, aparte del cifrado del WiFi: úsalo solo en tu hotspot o red privada, nunca en una WiFi pública. Desde la red solo se consulta y se manejan las fotos. No se entregan IP, identificadores del equipo, calibración, diagnóstico ni nombre de la red, y la API no se puede abrir a mano.
+
+Con `--red --codigo` se entra por HTTPS (puerto 8443) con un código de 8 dígitos que se crea en el PC: un solo uso, 10 min, guardado solo como hash scrypt en memoria; 5 errores bloquean ese equipo 5 min y 10 anulan el código. La sesión dura 12 h. El celular avisa que no conoce el certificado; compara su huella SHA-256 con la del PC. La clave privada queda en `%USERPROFILE%\.maceta_central`: no la compartas.
+
+Si no abre, falta permitir el puerto (8000, u 8443 con código). En PowerShell **como administrador**, una sola vez:
+```powershell
+New-NetFirewallRule -DisplayName "Maceta central" -Direction Inbound -Protocol TCP -LocalPort 8000 -RemoteAddress LocalSubnet -Action Allow
+```
+Para quitarla: `Remove-NetFirewallRule -DisplayName "Maceta central"`.
 
 ### Con macetas simuladas
 En una terminal el servidor y en otra las cuatro virtuales (se registran solas):
@@ -22,6 +38,7 @@ La maceta real muestra «Nivel de luz (%)» mientras no haya una calibración en
 ## API
 | Ruta | Qué hace |
 |---|---|
+| `GET /api/v1/acceso` | Si se permite entrar desde la red; el código solo se entrega al PC |
 | `GET /api/v1/salud` | Comprueba el servidor |
 | `GET /api/v1/macetas` | Macetas, conexión y último estado |
 | `POST /api/v1/macetas` | JSON: nombre, url; opcionales: especie y origen (`real` o `simulado`) |

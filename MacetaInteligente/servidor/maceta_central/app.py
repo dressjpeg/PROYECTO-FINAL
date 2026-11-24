@@ -4,10 +4,11 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
+from . import acceso as acc
 from . import capacidad as cap
 from . import fotos
 from .adaptador_http import validar_url
@@ -48,7 +49,7 @@ def permitido(x_maceta: str = Header("")):
         raise HTTPException(403, "Falta la cabecera X-Maceta")
 
 
-def crear_app(*bases, consultar=True):
+def crear_app(*bases, consultar=True, acceso=None):
     ings = {b.tipo: Ingesta(b) for b in bases}
 
     @asynccontextmanager
@@ -87,8 +88,9 @@ def crear_app(*bases, consultar=True):
         return {"ok": True, "tipos": list(ings), "hora": int(time.time())}
 
     @app.get("/api/v1/macetas")
-    def listar():
-        return [resumen(b, m) for b in bases for m in b.macetas()]
+    def listar(p: Request):
+        L = [resumen(b, m) for b in bases for m in b.macetas()]
+        return [acc.maceta_publica(m) for m in L] if acc.remoto(p) else L
 
     @app.post("/api/v1/macetas", status_code=201, dependencies=[Depends(permitido)])
     def crear(n: NuevaMaceta):
@@ -104,9 +106,10 @@ def crear_app(*bases, consultar=True):
         return {"id": mid}
 
     @app.get("/api/v1/macetas/{mid}")
-    def una(mid: str):
+    def una(mid: str, p: Request):
         b, m = buscar(mid)
-        return {**resumen(b, m), "config": b.config(m["dispositivo_id"])}
+        d = {**resumen(b, m), "config": b.config(m["dispositivo_id"])}
+        return acc.maceta_publica(d) if acc.remoto(p) else d
 
     @app.patch("/api/v1/macetas/{mid}/direccion", dependencies=[Depends(permitido)])
     def direccion(mid: str, d: Direccion):
@@ -131,20 +134,22 @@ def crear_app(*bases, consultar=True):
         return {"ok": True, "respaldo": r}
 
     @app.get("/api/v1/macetas/{mid}/lecturas")
-    def lecturas(mid: str, desde: int = Query(0, ge=0, le=2**40), hasta: int | None = Query(None, ge=0, le=2**40),
+    def lecturas(mid: str, p: Request, desde: int = Query(0, ge=0, le=2**40), hasta: int | None = Query(None, ge=0, le=2**40),
                  limite: int = Query(5000, ge=1, le=20000)):
-        return buscar(mid)[0].lecturas(mid, desde, hasta, limite)
+        L = buscar(mid)[0].lecturas(mid, desde, hasta, limite)
+        return [acc.lectura_publica(x) for x in L] if acc.remoto(p) else L
 
     @app.get("/api/v1/macetas/{mid}/diario")
     def diario(mid: str):
         return buscar(mid)[0].diario(mid)
 
     @app.get("/api/v1/capacidad")
-    def capacidad():
+    def capacidad(p: Request):
         reales = [resumen(b, m) for b in bases if b.tipo == "real" for m in b.macetas()]
         vs = ings["real"].vigilantes.values() if "real" in ings else []
-        return cap.calcular(bases, sum(m["conectada"] for m in reales), len(reales),
-                            [x for v in list(vs) for x in list(v.latencias)])
+        d = cap.calcular(bases, sum(m["conectada"] for m in reales), len(reales),
+                         [x for v in list(vs) for x in list(v.latencias)])
+        return acc.capacidad_publica(d) if acc.remoto(p) else d
 
     @app.put("/api/v1/capacidad", dependencies=[Depends(permitido)])
     def config_capacidad(c: ConfigCapacidad):
@@ -152,5 +157,6 @@ def crear_app(*bases, consultar=True):
         return {"ok": True}
 
     fotos.registrar(app, bases, buscar, permitido)
+    acc.registrar(app, acceso, permitido)
     app.mount("/", StaticFiles(directory=Path(__file__).parent / "web", html=True))
     return app

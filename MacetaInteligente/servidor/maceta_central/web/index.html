@@ -2,13 +2,14 @@
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Macetas inteligentes</title><link rel="icon" href="data:,">
 <link rel="stylesheet" href="avatar.css"><link rel="stylesheet" href="estilo.css"><link rel="stylesheet" href="jardin.css"><link rel="stylesheet" href="escala.css"><link rel="stylesheet" href="fotos.css"></head><body>
-<header><h1><a href="#">Macetas inteligentes</a></h1><nav aria-label="Secciones"><a href="#" id="navM">Jardín</a><a href="#cap" id="navC">Escalabilidad</a></nav><span id="con" role="status">Conectando…</span></header>
+<header><h1><a href="#">Macetas inteligentes</a></h1><nav aria-label="Secciones"><a href="#" id="navM">Jardín</a><a href="#cap" id="navC">Escalabilidad</a></nav><button type="button" id="salir" hidden>Salir</button><span id="con" role="status">Conectando…</span></header>
 <main>
 <section id="lista">
  <div class="resumen" id="cuenta"></div>
  <div class="sel" id="verSim" hidden><button data-f="todas" aria-pressed="true">Todas</button><button data-f="real" aria-pressed="false">Reales</button><button data-f="simulado" aria-pressed="false">Simuladas</button></div>
  <div class="macetas" id="macetas" role="list"></div><p class="et" id="vacio" hidden></p>
- <details class="c"><summary>Agregar maceta</summary>
+ <details class="c" id="cel" hidden><summary>Abrir en el celular</summary><p>Con el PC conectado al hotspot del celular, abre en el celular <b id="celU"></b></p><p class="et">Desde el celular se consulta y se manejan las fotos; lo demás se hace aquí. <span id="celA" hidden>Entra cualquiera que esté en esta red: úsalo solo en tu hotspot o red privada.</span></p><div id="celK" hidden><div class="acc"><button class="p" type="button" id="celN" style="margin:0">Crear código</button><button type="button" id="celX">Cerrar todas las sesiones</button></div><p role="status"><b id="celC"></b> <span id="celM"></span></p><p class="et">El código sirve una sola vez y vence en 10 minutos. El celular mostrará un aviso de certificado, porque es propio de este PC.</p><details><summary>Huella del certificado (SHA-256)</summary><p class="et" id="celH" style="overflow-wrap:anywhere"></p></details></div></details>
+ <details class="c sololocal"><summary>Agregar maceta</summary>
   <form id="alta">
    <label for="aN">Nombre</label><input id="aN" maxlength="60" required placeholder="Albahaca del balcón">
    <label for="aU">Dirección en la red local</label><input id="aU" maxlength="200" required placeholder="192.168.43.50">
@@ -43,18 +44,18 @@
  <div class="c" id="compara" hidden><h3>Comparar crecimiento</h3><div class="filtro"><label for="cA1">Antes<select id="cA1"></select></label><label for="cB1">Después<select id="cB1"></select></label></div>
   <div class="comp" id="comp"><img id="iA" alt=""><img id="iB" class="b" alt=""><b id="cmA"></b><b id="cmB"></b></div>
   <label for="cX">Mueve para comparar</label><input id="cX" type="range" min="0" max="100" value="50"><p id="cTxt"></p></div>
- <details class="c"><summary>Datos técnicos</summary><table><tbody id="dTec"></tbody></table></details>
- <details class="c"><summary>Conexión</summary>
+ <details class="c sololocal"><summary>Datos técnicos</summary><table><tbody id="dTec"></tbody></table></details>
+ <details class="c sololocal"><summary>Conexión</summary>
   <p id="dProp"></p>
-  <form id="dir"><label for="dU">Dirección en la red local</label><input id="dU" maxlength="200" required><p class="et">Verifica que la dirección sea de esta maceta: el prototipo 1 no informa un identificador.</p><button class="p">Cambiar dirección</button><p id="dirMsg" role="status"></p></form></details>
- <button class="peligro" id="dBorrar">Borrar esta maceta</button>
+  <form id="dir" class="sololocal"><label for="dU">Dirección en la red local</label><input id="dU" maxlength="200" required><p class="et">Verifica que la dirección sea de esta maceta: el prototipo 1 no informa un identificador.</p><button class="p">Cambiar dirección</button><p id="dirMsg" role="status"></p></form></details>
+ <button class="peligro sololocal" id="dBorrar">Borrar esta maceta</button>
 </section>
 <section id="capacidad" hidden>
  <h2>Escalabilidad</h2><p class="et">Solo cuentan las macetas reales: las simuladas corren en este PC y no ocupan la red.</p><p id="capError" class="aviso" hidden></p>
  <div class="kpis" id="kpis"></div>
  <div class="c" id="cuposCaja" hidden><h3>Cupos de la red</h3><div class="cupos" id="cupos"></div><p class="et" id="cuposTxt"></p></div>
  <div class="c"><h3>Límites de la infraestructura</h3><div id="recursos"></div><p class="et" id="capLat"></p></div>
- <details class="c"><summary>Ajustar datos</summary><form id="capForm">
+ <details class="c sololocal"><summary>Ajustar datos</summary><form id="capForm">
   <label for="cR">Red</label><input id="cR" maxlength="60" required>
   <label for="cL">Equipos que admite la red (vacío si no se sabe)</label><input id="cL" type="number" min="1" max="1000">
   <label for="cO">Equipos conectados que no son macetas</label><input id="cO" type="number" min="0" max="1000" required><p class="et">El PC cuenta. El celular que comparte los datos no; otro celular que se conecte, sí.</p>
@@ -69,5 +70,5 @@
 <dialog id="borrar" aria-labelledby="bT"><form id="bForm"><h2 id="bT"></h2><p id="bTxt"></p>
  <div id="bNom"><label for="bN">Escribe el nombre para confirmar</label><input id="bN" autocomplete="off"></div>
  <p id="bMsg" role="status"></p><div class="acciones"><button type="button" id="bNo">Cancelar</button><button class="peligro" id="bSi">Borrar</button></div></form></dialog>
-<script src="grafica.js"></script><script src="avatar.js"></script><script src="jardin.js"></script><script src="escala.js"></script><script src="fotos.js"></script><script src="borrar.js"></script><script src="app.js"></script>
+<script src="grafica.js"></script><script src="avatar.js"></script><script src="jardin.js"></script><script src="escala.js"></script><script src="fotos.js"></script><script src="borrar.js"></script><script src="app.js"></script><script src="acceso.js"></script>
 </body></html>
