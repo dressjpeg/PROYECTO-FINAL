@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Macetas inteligentes</title><link rel="icon" href="data:,">
-<link rel="stylesheet" href="avatar.css"><link rel="stylesheet" href="estilo.css"><link rel="stylesheet" href="jardin.css"><link rel="stylesheet" href="escala.css"><link rel="stylesheet" href="fotos.css"></head><body>
+<link rel="stylesheet" href="avatar.css"><link rel="stylesheet" href="estilo.css"><link rel="stylesheet" href="jardin.css"><link rel="stylesheet" href="escala.css"><link rel="stylesheet" href="fotos.css"><link rel="stylesheet" href="personajes.css"></head><body>
 <header><button type="button" id="menuB" aria-label="Abrir menú" aria-haspopup="dialog" aria-controls="menu"><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1><a href="#">Macetas inteligentes</a></h1><nav aria-label="Secciones"><a href="#" id="navM">Jardín</a><a href="#cap" id="navC">Escalabilidad</a></nav><button type="button" id="nueva" aria-label="Agregar maceta" title="Registrar una maceta nueva en el jardín" aria-haspopup="dialog" aria-controls="menu"><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Agregar maceta</span></button><button type="button" id="salir" hidden>Salir</button><span id="con" role="status">Conectando…</span></header>
 <dialog id="menu" aria-labelledby="menuT"><div class="cab"><h2 id="menuT">Menú</h2><button type="button" id="menuX" aria-label="Cerrar menú">✕</button></div>
  <a class="mEnl" href="#biblioteca" id="bibB"><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>Biblioteca de fotos</a>
@@ -11,9 +11,9 @@
  <details name="menu" id="mAlta"><summary><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Agregar maceta</summary>
   <form id="alta">
    <label for="aN">Nombre</label><input id="aN" maxlength="60" required placeholder="Albahaca del balcón">
-   <label for="aU">Dirección en la red local</label><input id="aU" maxlength="200" required placeholder="192.168.43.50">
+   <div id="aDir"><label for="aU">Dirección en la red local</label><input id="aU" maxlength="200" required placeholder="192.168.43.50"></div>
    <label for="aE">Especie (opcional)</label><input id="aE" maxlength="80">
-   <div id="aOrigen" class="sololocal" hidden><label for="aO">Origen de los datos</label><select id="aO"><option value="real">Maceta real</option><option value="simulado">Maceta simulada</option></select></div>
+   <div id="aOrigen" class="sololocal" hidden><label for="aO">Origen de los datos</label><select id="aO"><option value="real">Maceta real</option><option value="simulado">Maceta simulada</option></select><div id="aSim" hidden><label for="aX">Estado que simula</label><select id="aX"><option value="sana">Sana</option><option value="sed">Con sed</option><option value="encharcada">Encharcada</option><option value="poca_luz">Con poca luz</option></select><p class="et">Se enciende sola: no necesita dirección.</p></div></div>
    <button class="p">Agregar</button><p id="altaMsg" role="status"></p>
   </form></details>
 </dialog>
@@ -85,5 +85,5 @@
  <div id="bNom"><label for="bN">Escribe el nombre para confirmar</label><input id="bN" autocomplete="off"></div>
  <div id="bAut" hidden><button type="button" id="bPed">Pedir código al PC</button><label for="bC">Código que aparece en el PC</label><input id="bC" inputmode="numeric" autocomplete="off" maxlength="8"></div>
  <p id="bMsg" role="status"></p><div class="acciones"><button type="button" id="bNo">Cancelar</button><button class="peligro" id="bSi">Borrar</button></div></form></dialog>
-<script src="grafica.js"></script><script src="avatar.js"></script><script src="jardin.js"></script><script src="escala.js"></script><script src="fotos.js"></script><script src="borrar.js"></script><script src="app.js"></script><script src="acceso.js"></script>
+<script src="grafica.js"></script><script src="avatar.js"></script><script src="jardin.js"></script><script src="escala.js"></script><script src="fotos.js"></script><script src="borrar.js"></script><script src="app.js"></script><script src="acceso.js"></script><script src="personajes.js"></script>
 </body></html>

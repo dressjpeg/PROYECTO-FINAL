@@ -88,8 +88,11 @@ async function ciclo(){
 
 $('elige').onchange=e=>location.hash='#m/'+e.target.value;
 $('rg').onclick=e=>{const r=e.target.dataset.r;if(r){rango=+r;$('rg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b==e.target));cargaHist()}};
+/* Una simulada no pide dirección: el servidor la enciende */
+const altaSim=()=>tipos.length>1&&$('aO').value=='simulado';
+const altaCambia=()=>{const s=altaSim();$('aDir').hidden=s;$('aU').required=!s;$('aSim').hidden=!s};$('aO').onchange=altaCambia;
 $('alta').onsubmit=async e=>{e.preventDefault();const b=e.submitter||$('alta').querySelector('button'),m=$('altaMsg');b.disabled=true;
- try{await pide('/api/v1/macetas',{m:'POST',b:{nombre:$('aN').value,url:$('aU').value,especie:$('aE').value,origen:tipos.length>1?$('aO').value:tipos[0]}});m.textContent='Maceta agregada.';$('alta').reset();refresca().catch(()=>{})}
+ try{await pide('/api/v1/macetas?personaje='+encodeURIComponent(persAlta()),{m:'POST',b:{nombre:$('aN').value,url:altaSim()?'':$('aU').value,escenario:$('aX').value,especie:$('aE').value,origen:tipos.length>1?$('aO').value:tipos[0]}});m.textContent='Maceta agregada.';cargaPers();$('alta').reset();altaCambia();refresca().catch(()=>{})}
  catch(x){m.textContent='No se agregó: '+x.message}b.disabled=false};
 $('dir').onsubmit=async e=>{e.preventDefault();const m=$('dirMsg');
  try{await pide('/api/v1/macetas/'+actual+'/direccion',{m:'PATCH',b:{url:$('dU').value}});m.textContent='Dirección cambiada.';refresca().catch(()=>{})}catch(x){m.textContent='No se cambió: '+x.message}};

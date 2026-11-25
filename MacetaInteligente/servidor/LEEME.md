@@ -41,7 +41,7 @@ La maceta real muestra «Nivel de luz (%)» mientras no haya una calibración en
 | `GET /api/v1/acceso` | Si se permite entrar desde la red; el código solo se entrega al PC |
 | `GET /api/v1/salud` | Comprueba el servidor |
 | `GET /api/v1/macetas` | Macetas, conexión y último estado |
-| `POST /api/v1/macetas` | JSON: nombre, url; opcionales: especie y origen (`real` o `simulado`) |
+| `POST /api/v1/macetas` | JSON: nombre, url; opcionales: especie y origen (`real` o `simulado`). Una simulada sin url la enciende el servidor (puertos 8105–8199) con `escenario`: sana, sed, encharcada o poca_luz |
 | `GET /api/v1/macetas/{id}` | Una maceta, con umbrales y calibración |
 | `PATCH /api/v1/macetas/{id}/direccion` | JSON: url |
 | `DELETE /api/v1/macetas/{id}?nombre=` | Borra la maceta y sus datos; si tiene lecturas exige el nombre exacto |

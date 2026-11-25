@@ -1,0 +1,27 @@
+/* Personajes. Las imágenes tienen fondo blanco: multiply lo funde con la tarjeta y conserva las sombras */
+.pc{isolation:isolate}.pj{display:none}.conpj .av{display:none}
+.conpj .pj{display:block;position:relative;aspect-ratio:540/500;width:100%;max-width:270px;margin:auto}
+.pj{--t:1;--k:1;container-type:inline-size}.pj[data-pers="0"]{--t:.7;--k:1.6}.pj[data-pers="1"]{--t:1.8;--k:.5}
+.pjG{position:absolute;inset:0;mix-blend-mode:multiply;opacity:0;transition:opacity .4s}.pjG.ve{opacity:1}.pjB{position:absolute;inset:0;transform-origin:50% 95%}.pjI{position:absolute;inset:0;width:100%;height:100%}.pjL{position:absolute}.pjNube{position:absolute;width:30%;left:66%;top:1%;fill:#4a5470}
+.planta .conpj .pj{max-width:200px}.retrato .pj{max-width:340px}#prZ .conpj .pj{max-width:min(100%,66vh);width:100%}
+/* Mismas animaciones y tiempos que avatar.css; las distancias (unidades del dibujo de 200) van en cqw */
+[data-k=feliz]>.pjB{animation:pjHop calc(var(--t)*1.4s) ease infinite}[data-k=estr]>.pjB{animation:pjSh calc(var(--t)*.3s) linear infinite}.pjG[data-k=off]>.pjB{animation:br 4s ease infinite}
+.pjL[data-a=ojo]{animation:bl calc(var(--t)*4s) infinite}.pj[data-pers="2"] .pjL[data-a=ojo]:nth-child(2){animation:none}
+.pjL[data-a=boca]{animation:pa calc(var(--t)*.8s) ease infinite}.pjL[data-a=copa]{animation:pjSw calc(var(--t)*2.4s) ease infinite}
+.pjL[data-a=par]{animation:fl calc(var(--t)*1s) infinite}.pjL[data-a=cae]{animation:pjFa calc(var(--t)*1.6s) ease-in infinite var(--d,0s)}
+.pjL[data-a=gira]{animation:spin calc(var(--t)*9s) linear infinite}.pjL[data-a=zz]{animation:pjZz 3s linear infinite var(--d,0s)}.pjNube{animation:pjDr calc(var(--t)*4s) ease infinite}
+@keyframes pjHop{50%{transform:translateY(calc(var(--k)*-2cqw))}}
+@keyframes pjSh{25%{transform:translateX(calc(var(--k)*-.8cqw))}75%{transform:translateX(calc(var(--k)*.8cqw))}}
+@keyframes pjSw{0%,100%{transform:rotate(calc(var(--k)*-1.5deg))}50%{transform:rotate(calc(var(--k)*1.5deg))}}
+@keyframes pjFa{0%{transform:translateY(-3cqw);opacity:0}30%{opacity:1}100%{transform:translateY(calc(var(--k)*7cqw));opacity:0}}
+@keyframes pjZz{0%{opacity:0;transform:translate(0,3cqw)}40%{opacity:1}100%{opacity:0;transform:translate(4cqw,-5cqw)}}
+@keyframes pjDr{50%{transform:translateX(calc(var(--k)*3cqw))}}
+.pers{border:0;padding:0;margin:12px 0 0;min-width:0}.pers legend{padding:0;font-weight:600}
+.perOps{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px;margin:8px 0}
+.perOp{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;margin:0;padding:10px;border:2px solid var(--bd);border-radius:16px;cursor:pointer}
+.perOp input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.perOp:has(:checked){border-color:var(--pri)}.perOp:has(:checked) b::before{content:"✓ "}.perOp:has(:focus-visible){outline:3px solid var(--hum);outline-offset:2px}
+.perOp .mini{display:grid;place-items:center;width:100%;aspect-ratio:1;background:#f2f8ec;border-radius:12px;padding:6px;overflow:hidden}.perOp .mini>*{width:100%;max-width:100%;max-height:100%}.perOp .mini img{mix-blend-mode:multiply}
+.perOp small{font-weight:400;color:var(--tx2)}
+@media(prefers-reduced-motion:reduce){.pj *{animation:none!important;transition:none!important}}
+#detalle .dos+details{margin-top:14px}

@@ -1,0 +1,4 @@
+[
+ {"id": "maceta", "nombre": "Maceta clásica", "descripcion": "La original, animada"},
+ {"id": "bonsai", "nombre": "Bonsái", "descripcion": "Un arbolito expresivo", "imagenes": true, "capas": true}
+]

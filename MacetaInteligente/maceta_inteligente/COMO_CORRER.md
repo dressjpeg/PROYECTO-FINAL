@@ -40,6 +40,8 @@ cd ..\servidor; .venv\Scripts\python -m simulador.demo
 ```
 Teclas `1` a `4` y Enter: apagan o encienden una. `s` y Enter: salir. Al iniciar vuelve a registrar sus cuatro macetas aunque se hayan borrado.
 
+Para crear otra simulada: «Agregar maceta» → Origen **Maceta simulada** y elige su estado. No necesita dirección ni otra ventana: se enciende y se apaga con el servidor.
+
 ### 5. Abre el dashboard
 - **PC:** `http://127.0.0.1:8000` (también sirve la dirección de red, pero solo desde el mismo PC del servidor tiene todos los controles)
 - **Celular:** en el PC abre el menú ☰ → «Abrir en el celular» y escribe en el celular esa dirección, con `http://`. No pide código.
@@ -102,7 +104,7 @@ python -m venv .venv
 ```powershell
 cd ..\servidor; .venv\Scripts\python -m pytest -q
 ```
-Debe decir `61 passed`.
+Debe decir `69 passed`.
 
 ## Cambios en la forma de correrlo
 | Fecha | Cambio |
@@ -121,3 +123,5 @@ Debe decir `61 passed`.
 | 25-nov-2026 | El menú ☰ también aparece en el celular, sin las opciones del PC |
 | 25-nov-2026 | Menú ☰ → «Biblioteca de fotos»: todas las fotos por planta, en PC y celular; los comandos no cambian |
 | 25-nov-2026 | En el celular se desliza con el dedo en la biblioteca y en el modo presentación |
+| 25-nov-2026 | Cada maceta puede tener personaje (clásica o bonsái), al agregarla o en su detalle; hay que reiniciar el servidor |
+| 25-nov-2026 | Las simuladas creadas desde el formulario se encienden solas; hay que reiniciar el servidor |
