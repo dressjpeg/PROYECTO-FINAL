@@ -4,7 +4,7 @@ Proyecto final de Adquisición de Datos (IUE). Un ESP32 mide la humedad del suel
 
 | Tipo de dato | Variables |
 |---|---|
-| Medido por sensor | Humedad y luz |
+| Medido por sensor | Humedad del suelo (sensor resistivo YL-69) y luz (LDR) |
 | Estimado por reglas | Índice de salud y estado |
 | Registrado a mano | Altura y número de hojas |
 
@@ -15,6 +15,7 @@ El índice de salud es una estimación, no una medición.
 |---|---|
 | `MacetaInteligente/maceta_inteligente/` | Firmware v3 y dashboard web ([guía y API](MacetaInteligente/maceta_inteligente/LEEME.md)) |
 | `MacetaInteligente/MacetaInteligente_v3_backup.ino` | Firmware v3 antes del dashboard |
+| `MacetaInteligente/servidor/` | Servidor central en desarrollo ([guía](MacetaInteligente/servidor/LEEME.md)) |
 | `MacetaInteligente/avatar/` | Avatar animado original (integrado en la primera pestaña del dashboard) |
 | `Documentos/` | Roadmap, objetivos y alcance, lista de compras |
 | `Bocetos Visuales/` | Bocetos e infografía conceptuales |

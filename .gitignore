@@ -10,3 +10,10 @@ build/
 ~$*
 Thumbs.db
 desktop.ini
+
+# Servidor central y copias locales (los .bin contienen la clave WiFi)
+respaldos/
+MacetaInteligente/servidor/.venv/
+MacetaInteligente/servidor/datos*/
+__pycache__/
+.pytest_cache/

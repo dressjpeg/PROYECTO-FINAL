@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Macetas inteligentes</title><link rel="icon" href="data:,">
+<link rel="stylesheet" href="avatar.css"><link rel="stylesheet" href="estilo.css"><link rel="stylesheet" href="jardin.css"><link rel="stylesheet" href="escala.css"><link rel="stylesheet" href="fotos.css"></head><body>
+<header><button type="button" id="menuB" class="sololocal" aria-label="Abrir menú" aria-haspopup="dialog" aria-controls="menu"><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><h1><a href="#">Macetas inteligentes</a></h1><nav aria-label="Secciones"><a href="#" id="navM">Jardín</a><a href="#cap" id="navC">Escalabilidad</a></nav><button type="button" id="salir" hidden>Salir</button><span id="con" role="status">Conectando…</span></header>
+<dialog id="menu" class="sololocal" aria-labelledby="menuT"><div class="cab"><h2 id="menuT">Menú</h2><button type="button" id="menuX" aria-label="Cerrar menú">✕</button></div>
+ <details name="menu" id="cel" hidden><summary><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg>Abrir en el celular</summary><p>Con el PC conectado al hotspot del celular, abre en el celular <b id="celU"></b></p><p class="et">Desde el celular se consulta y se manejan las fotos; lo demás se hace aquí. <span id="celA" hidden>Entra cualquiera que esté en esta red: úsalo solo en tu hotspot o red privada.</span></p><div id="celK" hidden><div class="acc"><button class="p" type="button" id="celN" style="margin:0">Crear código</button><button type="button" id="celX">Cerrar todas las sesiones</button></div><p role="status"><b id="celC"></b> <span id="celM"></span></p><p class="et">El código sirve una sola vez y vence en 10 minutos. El celular mostrará un aviso de certificado, porque es propio de este PC.</p><details><summary>Huella del certificado (SHA-256)</summary><p class="et" id="celH" style="overflow-wrap:anywhere"></p></details></div></details>
+ <details name="menu" id="pap"><summary><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg>Papelera de fotos <span id="pN"></span></summary><div id="pL"></div><button type="button" class="peligro" id="pTodo">Vaciar todas las papeleras</button><p id="pMsg" role="status"></p></details>
+ <details name="menu" id="mAlta"><summary><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Agregar maceta</summary>
+  <form id="alta">
+   <label for="aN">Nombre</label><input id="aN" maxlength="60" required placeholder="Albahaca del balcón">
+   <label for="aU">Dirección en la red local</label><input id="aU" maxlength="200" required placeholder="192.168.43.50">
+   <label for="aE">Especie (opcional)</label><input id="aE" maxlength="80">
+   <div id="aOrigen" hidden><label for="aO">Origen de los datos</label><select id="aO"><option value="real">Maceta real</option><option value="simulado">Maceta simulada</option></select></div>
+   <button class="p">Agregar</button><p id="altaMsg" role="status"></p>
+  </form></details>
+</dialog>
+<main>
+<section id="lista">
+ <div class="resumen" id="cuenta"></div>
+ <div class="sel" id="verSim" hidden><button data-f="todas" aria-pressed="true">Todas</button><button data-f="real" aria-pressed="false">Reales</button><button data-f="simulado" aria-pressed="false">Simuladas</button></div>
+ <div class="macetas" id="macetas" role="list"></div><p class="et" id="vacio" hidden></p>
+</section>
+
+<section id="detalle" hidden>
+ <div class="barra"><a class="bt" href="#">← Todas</a><label class="oc" for="elige">Maceta</label><select id="elige"></select></div>
+ <p id="dAviso" class="aviso" hidden></p>
+ <div class="dos">
+  <div class="retrato"><h2 id="dN"></h2><p id="dTags"></p><div><div class="pc" data-k="feliz"><span class="bd">Feliz</span><svg id="av" class="av" viewBox="0-18 200 218" data-c="feliz" data-pers="0" role="img" aria-label="Feliz"><defs><path id="dp" d="M0-7q-5 7-5 10a5 5 0 0 0 10 0q0-3-5-10z"/></defs><ellipse class="sh" cx="100" cy="190" rx="62" ry="7"/><ellipse class="pd" cx="100" cy="189" rx="76" ry="9"/><path class="hap" d="M30 72q-8 14 0 28M19 66q-12 20 0 40M170 72q8 14 0 28M181 66q12 20 0 40"/><path class="sk" d="M30 118q-5 5 0 10t0 10M40 114q-5 5 0 10t0 10M170 118q5 5 0 10t0 10M160 114q5 5 0 10t0 10"/><g class="bo"><path class="pt" d="M50 108H150L139 176Q138 184 130 184H70Q62 184 61 176Z"/><rect class="rm" x="42" y="89" width="116" height="23" rx="7"/><ellipse class="so" cx="100" cy="94" rx="50" ry="6"/><ellipse class="wt" cx="100" cy="94" rx="52" ry="7"/><g class="pl"><path class="st" d="M100 96V58"/><path class="lf l" d="M100 64C85 42 55 44 44 57C59 72 85 72 100 64Z"/><path class="lf r" d="M100 64C115 42 145 44 156 57C141 72 115 72 100 64Z"/><path class="lf b" d="M100 60C93 50 95 40 100 33C105 40 107 50 100 60Z"/></g><g class="fc"><path class="bw" d="M68 122Q77 116 87 119M132 122Q123 116 113 119"/><path class="bf" d="M70 123H88M112 123H130"/><g class="eo"><g class="e1"><circle cx="80" cy="136" r="8"/><circle class="hl" cx="82.5" cy="133" r="2.6"/></g><g class="e2"><circle cx="120" cy="136" r="8"/><circle class="hl" cx="122.5" cy="133" r="2.6"/></g></g><path class="ld" d="M71 136a9 9 0 0 1 18 0zM111 136a9 9 0 0 1 18 0z"/><path class="eh" d="M71 138Q80 127 89 138M111 138Q120 127 129 138"/><path class="ez" d="M71 134Q80 143 89 134M111 134Q120 143 129 134"/><path class="ex" d="M73 130L87 136L73 142M127 130L113 136L127 142"/><g class="ck"><ellipse cx="70" cy="151" rx="7.5" ry="5"/><ellipse cx="130" cy="151" rx="7.5" ry="5"/></g><g class="mo"><ellipse cx="100" cy="155" rx="6.5" ry="8.5"/><ellipse class="tg" cx="100" cy="160" rx="4" ry="2.6"/></g><g class="ms"><path d="M88 148Q100 166 112 148Z"/><ellipse class="tg" cx="100" cy="156.5" rx="4.5" ry="2.6"/></g><path class="tq" d="M95 155q5 13 10 0z"/><path class="mw" d="M86 155q3.5-5 7 0t7 0t7 0t7 0"/><path class="mf" d="M92 157Q100 149 108 157"/><path class="mk" d="M97 147q7 3 0 6q7 3 0 6"/><ellipse class="mz" cx="100" cy="155" rx="4" ry="5"/><use class="tr" href="#dp" x="131" y="148"/><g class="sw"><use href="#dp" x="62" y="129"/><use href="#dp" x="140" y="125"/></g></g></g><g class="dr"><use href="#dp" x="28" y="112"/><use href="#dp" x="172" y="102"/><use href="#dp" x="34" y="152"/><use href="#dp" x="168" y="146"/></g><g class="cl"><circle cx="88" cy="8" r="12"/><circle cx="104" cy="1" r="14"/><circle cx="119" cy="9" r="10"/><rect x="77" y="8" width="51" height="12" rx="6"/></g><g class="su"><path class="ry" d="M165-8v-5M165 32v5M145 12h-5M185 12h5M151-2l-4-4M179 26l4 4M179-2l4-4M151 26l-4 4"/><circle cx="165" cy="12" r="13"/></g><g class="zz"><text x="148" y="44">z</text><text x="160" y="26">z</text><text x="172" y="8">Z</text></g></svg></div></div><p id="dFrase"></p><span class="tag">Estado estimado por reglas</span></div>
+  <div class="g" id="dMed"></div>
+ </div>
+ <h2>Historial</h2>
+ <div class="sel" id="rg"><button data-r="3600" aria-pressed="false">1 h</button><button data-r="86400" aria-pressed="true">24 h</button><button data-r="604800" aria-pressed="false">7 días</button><button data-r="2592000" aria-pressed="false">30 días</button></div>
+ <p class="et" id="hMsg" role="status"></p>
+ <div class="c"><h3>Humedad del suelo (%) <span class="tag procH"></span></h3><canvas id="ch" height="190"></canvas></div>
+ <div class="c"><h3>Nivel de luz (%) <span class="tag procH"></span></h3><canvas id="cl" height="190"></canvas></div>
+ <div class="c est"><h3>Índice de salud (/100) <span class="tag">Estimado</span></h3><canvas id="ci" height="190"></canvas></div>
+ <h2>Fotos del crecimiento</h2>
+ <div class="c"><div class="acc"><button class="p" type="button" id="fTomar" style="margin:0">Tomar foto</button><button type="button" id="fSubir">Subir fotos</button><button type="button" id="fPap" aria-pressed="false">Ver papelera</button><button type="button" class="peligro sololocal" id="fVac" hidden>Vaciar papelera</button></div>
+  <input type="file" id="fArch" accept="image/jpeg,image/png,image/webp" multiple hidden><input type="file" id="fCam" accept="image/*" capture="environment" hidden>
+  <p id="fMsg" role="status"></p>
+  <details><summary>Datos de la foto (opcional)</summary><p class="et">Escríbelos antes de tomarla o subirla. Se registran a mano.</p>
+   <label for="fAlt">Altura (cm)</label><input id="fAlt" inputmode="decimal" placeholder="12,5"><label for="fHoj">Número de hojas</label><input id="fHoj" type="number" min="0" max="999">
+   <label for="fNota">Nota</label><input id="fNota" maxlength="200"><label for="fCuando">Fecha y hora (vacío: automática)</label><input id="fCuando" type="datetime-local"></details>
+  <div class="filtro"><label for="fD">Desde<input id="fD" type="date"></label><label for="fH">Hasta<input id="fH" type="date"></label></div>
+  <p class="et" id="fCuenta"></p><div class="album" id="album"></div></div>
+ <div class="c" id="compara" hidden><h3>Comparar crecimiento</h3><div class="filtro"><label for="cA1">Antes<select id="cA1"></select></label><label for="cB1">Después<select id="cB1"></select></label></div>
+  <div class="comp" id="comp"><img id="iA" alt=""><img id="iB" class="b" alt=""><b id="cmA"></b><b id="cmB"></b></div>
+  <label for="cX">Mueve para comparar</label><input id="cX" type="range" min="0" max="100" value="50"><p id="cTxt"></p></div>
+ <details class="c sololocal"><summary>Datos técnicos</summary><table><tbody id="dTec"></tbody></table></details>
+ <details class="c sololocal"><summary>Conexión</summary>
+  <p id="dProp"></p>
+  <form id="dir" class="sololocal"><label for="dU">Dirección en la red local</label><input id="dU" maxlength="200" required><p class="et">Verifica que la dirección sea de esta maceta: el prototipo 1 no informa un identificador.</p><button class="p">Cambiar dirección</button><p id="dirMsg" role="status"></p></form></details>
+ <button class="peligro sololocal" id="dBorrar">Borrar esta maceta</button>
+</section>
+<section id="capacidad" hidden>
+ <h2>Escalabilidad</h2><p class="et">Solo cuentan las macetas reales: las simuladas corren en este PC y no ocupan la red.</p><p id="capError" class="aviso" hidden></p>
+ <div class="kpis" id="kpis"></div>
+ <div class="c" id="cuposCaja" hidden><h3>Cupos de la red</h3><div class="cupos" id="cupos"></div><p class="et" id="cuposTxt"></p></div>
+ <div class="c"><h3>Límites de la infraestructura</h3><div id="recursos"></div><p class="et" id="capLat"></p></div>
+ <details class="c sololocal"><summary>Ajustar datos</summary><form id="capForm">
+  <label for="cR">Red</label><input id="cR" maxlength="60" required>
+  <label for="cL">Equipos que admite la red (vacío si no se sabe)</label><input id="cL" type="number" min="1" max="1000">
+  <label for="cO">Equipos conectados que no son macetas</label><input id="cO" type="number" min="0" max="1000" required><p class="et">El PC cuenta. El celular que comparte los datos no; otro celular que se conecte, sí.</p>
+  <label for="cA">Años de historial por guardar</label><input id="cA" type="number" min="1" max="20" required>
+  <button class="p">Guardar</button><p id="capMsg" role="status"></p></form></details>
+</section>
+</main>
+<dialog id="camara" class="ancho" aria-label="Tomar foto"><div class="cam"><video id="cVideo" autoplay playsinline muted></video><img id="cGuia" alt="" hidden></div>
+ <div id="cGuiaC"><label for="cOp">Silueta de la última foto, para repetir el ángulo</label><input id="cOp" type="range" min="0" max="70" value="30"></div>
+ <p id="cMsg" role="status"></p><div class="acciones"><button type="button" id="cNo">Cancelar</button><button type="button" class="p" id="cSi" style="margin:0">Capturar</button></div></dialog>
+<dialog id="visor" class="ancho" aria-labelledby="vT"><h2 id="vT"></h2><img id="vImg" alt=""><p id="vTxt"></p><p id="vMsg" role="status"></p><div class="acciones"><button type="button" class="peligro sololocal" id="vElim" hidden>Borrar para siempre</button><button type="button" id="vDel"></button><button type="button" class="p" id="vNo" style="margin:0">Cerrar</button></div></dialog>
+<dialog id="vaciar" aria-labelledby="xT"><h2 id="xT"></h2><p id="xTxt"></p><p id="xMsg" role="status"></p><div class="acciones"><button type="button" id="xNo" autofocus>Cancelar</button><button type="button" class="peligro" id="xSi">Borrar para siempre</button></div></dialog>
+<dialog id="borrar" aria-labelledby="bT"><form id="bForm"><h2 id="bT"></h2><p id="bTxt"></p>
+ <div id="bNom"><label for="bN">Escribe el nombre para confirmar</label><input id="bN" autocomplete="off"></div>
+ <p id="bMsg" role="status"></p><div class="acciones"><button type="button" id="bNo">Cancelar</button><button class="peligro" id="bSi">Borrar</button></div></form></dialog>
+<script src="grafica.js"></script><script src="avatar.js"></script><script src="jardin.js"></script><script src="escala.js"></script><script src="fotos.js"></script><script src="borrar.js"></script><script src="app.js"></script><script src="acceso.js"></script>
+</body></html>
