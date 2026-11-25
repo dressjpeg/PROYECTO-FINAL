@@ -21,3 +21,14 @@ $('salir').onclick=async()=>{try{await pide('/salir',{m:'POST'})}catch(e){}locat
 setInterval(()=>{if($('cel').open&&!$('cel').hidden)celPinta()},1000);
 setInterval(()=>{if($('cel').open&&!$('cel').hidden&&celFin)cargaAcceso()},4000);
 cargaAcceso();
+
+/* En el PC: avisa cuando un celular pide borrar una maceta y muestra el código */
+async function cargaPermiso(){
+ if($('cel').hidden)return;
+ try{const k=(await pide('/api/v1/acceso/permiso')).permiso,e=$('permiso'),ve=e.matches(':popover-open');
+  if(!k){if(ve)e.hidePopover();return}
+  $('peT').textContent='«'+k.maceta+'», desde el equipo '+k.equipo+'. Dale este código solo si lo autorizas:';$('peC').textContent=k.codigo.replace(/(...)/,'$1 ');$('peS').textContent='Vence en '+k.segundos+' s';
+  if(!ve)e.showPopover()}catch(e){}
+}
+$('peN').onclick=async()=>{try{await pide('/api/v1/acceso/permiso',{m:'DELETE'})}catch(e){}cargaPermiso()};
+setInterval(cargaPermiso,2000);

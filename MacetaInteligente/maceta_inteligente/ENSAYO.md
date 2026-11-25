@@ -33,11 +33,11 @@ Ensayo: 2 de diciembre de 2026. Congelar código y respaldo: 1 de diciembre. **P
 
 ## 4. Prueba del celular y la foto
 1. [ ] En el PC abre el menú ☰ → «Abrir en el celular» y escribe en el celular esa dirección, con `http://`
-2. [ ] Entra sin pedir código y sin botones para agregar o borrar macetas
+2. [ ] Entra sin pedir código y con el menú ☰ (presentación y agregar) y el «+»; borrar una maceta pide un código que sale en el PC
 3. [ ] Maceta 1 → Fotos del crecimiento → Tomar foto, con la regla visible
 4. [ ] La foto aparece en el celular y en el PC
 5. [ ] Fecha y orientación correctas
-6. [ ] Comparar dos fotos
+6. [ ] Comparar dos fotos y reproducir el timelapse
 7. [ ] Enviar una de prueba a la papelera y restaurarla
 
 | Prueba | Fecha | Celular y navegador | Resultado |
@@ -51,7 +51,7 @@ Ensayo: 2 de diciembre de 2026. Congelar código y respaldo: 1 de diciembre. **P
 |---|---|---|
 | 0–1 | Problema y maceta | Ayuda a cuidar una planta con datos de humedad y luz |
 | 1–3 | Maceta y LCD | Humedad (YL-69, resistivo) y luz (LDR) son **medidas**; índice y estado son **estimados por reglas**, sin IA |
-| 3–4 | Jardín en el PC | Una maceta real; las otras cuatro son **simuladas** para mostrar el crecimiento del sistema |
+| 3–4 | Jardín en el PC y modo presentación (☰) | Una maceta real; las otras cuatro son **simuladas** para mostrar el crecimiento del sistema |
 | 4–5 | Historial y datos técnicos | Adquisición, unidades, calibración y procedencia |
 | 5–6 | Apagar una simulada (`1` y Enter) | Se marca sin conexión en unos 30 s y conserva su historial |
 | 6–7 | Foto desde el celular y comparación | Altura y hojas se **registran a mano** |

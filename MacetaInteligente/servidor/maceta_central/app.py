@@ -11,9 +11,11 @@ from pydantic import BaseModel, Field, field_validator
 from . import acceso as acc
 from . import capacidad as cap
 from . import fotos
+from . import personajes
 from .adaptador_http import validar_url
 from .base import Conflicto, calidad
 from .ingesta import Ingesta
+from .virtuales import Virtuales
 
 
 class Direccion(BaseModel):
@@ -26,9 +28,16 @@ class Direccion(BaseModel):
 
 
 class NuevaMaceta(Direccion):
+    url: str = Field("", max_length=200)      # vacía en una simulada: la enciende el servidor
+    escenario: Literal["sana", "sed", "encharcada", "poca_luz"] = "sana"
     nombre: str = Field(min_length=1, max_length=60)
     especie: str = Field("", max_length=80)
     origen: Literal["real", "simulado"] | None = None   # None = la base principal
+
+    @field_validator("url")
+    @classmethod
+    def _url(cls, v):
+        return validar_url(v) if v.strip() else ""
 
     @field_validator("nombre", "especie", mode="before")
     @classmethod
@@ -55,11 +64,15 @@ def crear_app(*bases, consultar=True, acceso=None):
     @asynccontextmanager
     async def vida(_):
         if consultar:
+            if virtuales:
+                virtuales.iniciar()
             for i in ings.values():
                 i.sincronizar()
         yield
         for i in ings.values():
             i.parar.set()
+        if virtuales:
+            virtuales.detener()
 
     # Sin /docs: cargaría archivos de internet
     app = FastAPI(title="Maceta central", lifespan=vida, docs_url=None, redoc_url=None, openapi_url=None)
@@ -93,14 +106,23 @@ def crear_app(*bases, consultar=True, acceso=None):
         return [acc.maceta_publica(m) for m in L] if acc.remoto(p) else L
 
     @app.post("/api/v1/macetas", status_code=201, dependencies=[Depends(permitido)])
-    def crear(n: NuevaMaceta):
+    def crear(n: NuevaMaceta, p: Request, personaje: str = personajes.NORMAL):
+        personajes.validar(personaje)
+        if acc.remoto(p):
+            acc.revisar_alta(n, sum(len(b.macetas()) for b in bases if b.tipo == "real"))
         tipo = n.origen or bases[0].tipo
         if tipo not in ings:
             raise HTTPException(400, f"Este servidor no admite macetas de tipo {tipo}")
         try:
-            mid = ings[tipo].base.crear_maceta(n.nombre, n.url, n.especie)
+            if n.url:
+                mid = ings[tipo].base.crear_maceta(n.nombre, n.url, n.especie)
+            elif tipo == "simulado":
+                mid = virtuales.crear(n.nombre, n.especie, n.escenario)
+            else:
+                raise HTTPException(422, "Escribe la dirección de la maceta")
         except Conflicto as e:
             raise HTTPException(409, str(e))
+        personajes.poner(ings[tipo].base, mid, personaje)
         if consultar:
             ings[tipo].sincronizar()
         return {"id": mid}
@@ -121,17 +143,31 @@ def crear_app(*bases, consultar=True, acceso=None):
         v = ings[b.tipo].vigilantes.get(mid)
         if v:
             v.cambiar_url(d.url)
+        if virtuales and b.tipo == "simulado":
+            virtuales.ajustar()
         return {"ok": True}
 
     @app.delete("/api/v1/macetas/{mid}", dependencies=[Depends(permitido)])
-    def borrar(mid: str, nombre: str = ""):
+    def borrar(mid: str, p: Request, nombre: str = "", x_autorizacion: str = Header("", max_length=20)):
         b, m = buscar(mid)
         # Con historial hay que escribir el nombre: evita borrar la maceta equivocada
         if (m["lecturas"] or fotos.hay(b, mid)) and nombre.strip() != m["nombre"]:
             raise HTTPException(409, "Escribe el nombre exacto de la maceta para borrarla")
+        if acc.remoto(p):
+            acceso.usar_permiso(p.client.host, mid, x_autorizacion)
         r = ings[b.tipo].borrar(mid)
         fotos.archivar(b, mid)
-        return {"ok": True, "respaldo": r}
+        if virtuales and b.tipo == "simulado":
+            virtuales.ajustar()
+        return {"ok": True} if acc.remoto(p) else {"ok": True, "respaldo": r}
+
+    @app.post("/api/v1/macetas/{mid}/autorizacion", dependencies=[Depends(permitido)])
+    def autorizacion(mid: str, p: Request):
+        _, m = buscar(mid)
+        if not acc.remoto(p):
+            raise HTTPException(400, "En el PC no hace falta autorización")
+        acceso.pedir_permiso(p.client.host, mid, m["nombre"])
+        return {"segundos": acc.PERMISO_S}
 
     @app.get("/api/v1/macetas/{mid}/lecturas")
     def lecturas(mid: str, p: Request, desde: int = Query(0, ge=0, le=2**40), hasta: int | None = Query(None, ge=0, le=2**40),
@@ -157,6 +193,8 @@ def crear_app(*bases, consultar=True, acceso=None):
         return {"ok": True}
 
     fotos.registrar(app, bases, buscar, permitido)
+    virtuales = next((Virtuales(b) for b in bases if b.tipo == "simulado"), None)
+    personajes.registrar(app, bases, buscar, permitido)
     acc.registrar(app, acceso, permitido)
     app.mount("/", StaticFiles(directory=Path(__file__).parent / "web", html=True))
     return app
