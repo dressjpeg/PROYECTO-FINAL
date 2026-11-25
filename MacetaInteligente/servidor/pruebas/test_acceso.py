@@ -191,3 +191,31 @@ def test_red_abierta_sin_codigo(tmp_path):
     assert pc.get("/api/v1/acceso").json()["con_codigo"] is False
     assert pc.post("/api/v1/acceso/codigo", headers=H).status_code == 403
     assert pc.get("/api/v1/macetas").json()[0]["url"] == "http://10.0.0.1"
+
+
+def test_el_celular_no_vacia_la_papelera(srv, tmp_path):
+    a, cliente, m = srv
+    c = cliente()
+    entra(c, a)
+    u = f"/api/v1/macetas/{m}/papelera?esperadas=0"
+    for otra in (f"/api/v1/macetas/{m}/papelera/x", "/api/v1/papelera?esperadas=0"):
+        assert c.delete(otra, headers=H).status_code == 403
+    assert c.delete(u, headers=H).status_code == 403
+    abierta = crear_app(Base(tmp_path / "x.db"), consultar=False, acceso=ac.Acceso(8000, con_codigo=False))
+    assert TestClient(abierta, base_url="http://10.0.0.2:8000", client=("10.0.0.9", 5)).delete(u, headers=H).status_code == 403
+    assert cliente("127.0.0.1", "127.0.0.1:8000").delete(u, headers=H).status_code == 200
+
+
+def test_el_pc_por_su_ip_de_red_es_local(tmp_path):
+    app = crear_app(Base(tmp_path / "x.db"), consultar=False, acceso=ac.Acceso(8000, con_codigo=False))
+
+    def remoto(ip, host):
+        r = TestClient(app, base_url=f"http://{host}:8000", client=(ip, 5)).get("/api/v1/acceso", headers=H)
+        return r.json().get("remoto", r.status_code)
+    assert remoto("10.0.0.2", "10.0.0.2") is False
+    assert remoto("10.0.0.9", "10.0.0.2") is True
+    # Host falso: el destino real de la conexión no cambia
+    c = TestClient(app, base_url="http://10.0.0.2:8000", client=("10.0.0.9", 5))
+    assert c.get("/api/v1/acceso", headers={**H, "Host": "10.0.0.9"}).json()["remoto"] is True
+    c = TestClient(app, base_url="http://10.0.0.2:8000", client=("10.0.0.2", 5))
+    assert c.get("/api/v1/acceso", headers={**H, "Host": "sitio-externo.example"}).status_code == 403

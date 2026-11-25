@@ -33,3 +33,14 @@
 .basura{position:absolute;top:20px;right:20px;z-index:1;padding:7px;width:38px;height:38px;border-radius:12px;background:#fffc;color:#52564c;border:0}.basura:hover,.basura:focus-visible{background:var(--rojo);color:#fff}
 .basura svg{display:block;width:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.peligro{background:var(--rojo);color:#fff;border-color:var(--rojo)}button:disabled{opacity:.45;cursor:not-allowed}
 dialog{border:1px solid var(--bd);border-radius:22px;background:var(--sup);color:var(--tx);padding:22px;width:min(440px,92vw)}dialog::backdrop{background:#0009}dialog h2{margin-top:0}.acciones{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+/* Menú lateral */
+.mi{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-5px}
+#menuB{display:flex;align-items:center;justify-content:center;width:46px;height:46px;padding:0}header h1{margin-right:auto}
+.remoto #menuB{display:none}
+#menu{position:fixed;inset:0 auto 0 0;margin:0;width:min(400px,90vw);height:100dvh;max-height:none;border:0;border-right:1px solid var(--bd);border-radius:0 22px 22px 0;padding:16px;overflow-y:auto;overscroll-behavior:contain}
+#menu[open]{animation:entra .22s ease-out}@keyframes entra{from{transform:translateX(-100%)}}
+#menu .cab{display:flex;justify-content:space-between;align-items:center}#menu h2{margin:0}#menuX{width:44px;height:44px;padding:0}
+#menu details{border-bottom:1px solid var(--bd);padding:8px 0}#menu summary{display:flex;align-items:center;gap:12px;min-height:44px;list-style:none;border-radius:10px;padding:4px 8px}
+#menu summary::-webkit-details-marker{display:none}#menu summary::after{content:"›";margin-left:auto;font-size:22px;transition:transform .2s}#menu details[open]>summary::after{transform:rotate(90deg)}
+#menu summary:hover{background:var(--bg)}#menu details b{overflow-wrap:anywhere;white-space:normal}
+@media(prefers-reduced-motion:reduce){#menu[open]{animation:none}}

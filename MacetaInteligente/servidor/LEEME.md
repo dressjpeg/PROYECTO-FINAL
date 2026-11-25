@@ -14,7 +14,7 @@ Abre `http://127.0.0.1:8000`. Sin `--red` solo responde en este PC.
 ```powershell
 .venv\Scripts\python -m maceta_central --demo --red
 ```
-Conecta el PC al hotspot del celular; en el PC, «Abrir en el celular» muestra la dirección (`http://IP-del-PC:8000`). Ábrela en el celular: no pide código.
+Conecta el PC al hotspot del celular; en el PC, menú ☰ → «Abrir en el celular» muestra la dirección (`http://IP-del-PC:8000`). Ábrela en el celular: no pide código.
 
 Entra cualquiera que esté en esa red y la conexión no va cifrada, aparte del cifrado del WiFi: úsalo solo en tu hotspot o red privada, nunca en una WiFi pública. Desde la red solo se consulta y se manejan las fotos. No se entregan IP, identificadores del equipo, calibración, diagnóstico ni nombre de la red, y la API no se puede abrir a mano.
 
@@ -54,6 +54,9 @@ POST, PUT, PATCH y DELETE exigen `X-Maceta: 1`.
 | `POST /api/v1/macetas/{id}/fotos?cuando=&camara=&nota=&altura=&hojas=` | El cuerpo es la imagen (JPG, PNG o WebP, máx. 12 MB) |
 | `GET /api/v1/macetas/{id}/fotos/{foto}/grande.jpg` o `mini.jpg` | Imagen |
 | `DELETE /api/v1/macetas/{id}/fotos/{foto}` y `POST …/restaurar` | Enviar a la papelera y recuperar |
+| `DELETE /api/v1/macetas/{id}/papelera?esperadas=N` | Borra para siempre las N fotos de la papelera; solo desde el PC |
+| `DELETE /api/v1/macetas/{id}/papelera/{foto}` | Borra para siempre una foto de la papelera; solo desde el PC |
+| `GET /api/v1/papelera` y `DELETE /api/v1/papelera?esperadas=N` | Cuántas hay por maceta; vaciar todas (solo desde el PC) |
 | `GET /api/v1/capacidad` | Conectadas, registradas, capacidad, cupo y límites (solo macetas reales) |
 | `PUT /api/v1/capacidad` | JSON: red, limite_wifi, otros_equipos, anios |
 

@@ -153,6 +153,30 @@ def listar(base, mid, desde, hasta, papelera):
         return fs
 
 
+def en_papelera(base, mid=None, fid=None):
+    with base.con() as c:
+        return [(base, f) for f in c.execute(
+            "SELECT id,ruta,maceta_id FROM fotos WHERE borrada_en IS NOT NULL AND (?1 IS NULL OR maceta_id=?1) AND (?2 IS NULL OR id=?2)",
+            (mid, fid))]
+
+
+def eliminar(fs, esperadas):
+    """Borra para siempre fotos de la papelera. Si un archivo no se puede borrar, su foto sigue en la papelera."""
+    if len(fs) != esperadas:
+        raise HTTPException(409, "La papelera cambió. Revísala e inténtalo de nuevo")
+    n = 0
+    for base, f in fs:
+        try:
+            with base.con() as c:   # si falla el archivo, se deshace el borrado de la fila
+                if c.execute("DELETE FROM fotos WHERE id=? AND borrada_en IS NOT NULL", (f["id"],)).rowcount:
+                    for fin in ("_m.jpg", ".jpg"):
+                        (carpeta(base) / (f["ruta"] + fin)).unlink(missing_ok=True)
+                    n += 1
+        except OSError:
+            pass
+    return {"borradas": n, "fallidas": len(fs) - n}
+
+
 def registrar(app, bases, buscar, permitido):
     for b in bases:
         iniciar(b)
@@ -202,6 +226,30 @@ def registrar(app, bases, buscar, permitido):
     @app.delete("/api/v1/macetas/{mid}/fotos/{fid}", dependencies=[Depends(permitido)])
     def a_papelera(mid: str, fid: str):
         return mover(mid, fid, True)
+
+    # Fuera de /fotos/: acceso.py solo deja usarla desde el PC
+    @app.delete("/api/v1/macetas/{mid}/papelera", dependencies=[Depends(permitido)])
+    def vaciar_papelera(mid: str, esperadas: int = Query(ge=0)):
+        return eliminar(en_papelera(buscar(mid)[0], mid), esperadas)
+
+    @app.delete("/api/v1/macetas/{mid}/papelera/{fid}", dependencies=[Depends(permitido)])
+    def eliminar_una(mid: str, fid: str):
+        fs = en_papelera(buscar(mid)[0], mid, fid)
+        if not fs:
+            raise HTTPException(404, "Esa foto no está en la papelera")
+        return eliminar(fs, 1)
+
+    @app.get("/api/v1/papelera")
+    def papelera_general():
+        n = {}
+        for b in bases:
+            for _, f in en_papelera(b):
+                n[f["maceta_id"]] = n.get(f["maceta_id"], 0) + 1
+        return n
+
+    @app.delete("/api/v1/papelera", dependencies=[Depends(permitido)])
+    def vaciar_general(esperadas: int = Query(ge=0)):
+        return eliminar([x for b in bases for x in en_papelera(b)], esperadas)
 
     @app.post("/api/v1/macetas/{mid}/fotos/{fid}/restaurar", dependencies=[Depends(permitido)])
     def restaurar(mid: str, fid: str):

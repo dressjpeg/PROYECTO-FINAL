@@ -41,8 +41,8 @@ cd ..\servidor; .venv\Scripts\python -m simulador.demo
 Teclas `1` a `4` y Enter: apagan o encienden una. `s` y Enter: salir. Al iniciar vuelve a registrar sus cuatro macetas aunque se hayan borrado.
 
 ### 5. Abre el dashboard
-- **PC:** `http://127.0.0.1:8000`
-- **Celular:** en el PC despliega «Abrir en el celular» y escribe en el celular esa dirección, con `http://`. No pide código.
+- **PC:** `http://127.0.0.1:8000` (también sirve la dirección de red, pero solo desde el mismo PC del servidor tiene todos los controles)
+- **Celular:** en el PC abre el menú ☰ → «Abrir en el celular» y escribe en el celular esa dirección, con `http://`. No pide código.
 - **Si cambió la IP de la maceta:** en el PC, entra a la maceta → «Conexión» → «Cambiar dirección».
 
 ### Para cerrar
@@ -50,6 +50,11 @@ Teclas `1` a `4` y Enter: apagan o encienden una. `s` y Enter: salir. Al iniciar
 
 ## Tomar la foto
 Maceta → «Fotos del crecimiento» → «Tomar foto» o «Subir fotos». Usa siempre el mismo ángulo y deja la regla visible. Se aceptan JPG, PNG y WebP de hasta 12 MB; las HEIC de iPhone se convierten antes a JPG.
+
+Para liberar espacio, **en el PC**: borra para siempre fotos descartadas. Desde el celular no se puede.
+- **Una foto:** maceta → «Ver papelera» → abre la foto → «Borrar para siempre».
+- **Una maceta:** «Ver papelera» → «Vaciar papelera».
+- **Todas:** menú ☰ → «Papelera de fotos» → «Vaciar todas las papeleras».
 
 ## Instalar por primera vez en un PC
 Hace falta Python 3.11 e internet:
@@ -74,7 +79,11 @@ python -m venv .venv
 | Sigue sin abrir | Permite Python en el firewall de Windows (regla en `servidor\LEEME.md`) |
 | La maceta sale «Sin conexión» | Revisa que esté encendida, en la misma red y con la IP correcta (paso 5). Al volver, se recuperan hasta 7 días de historial |
 | `maceta.local` no abre | Usa la IP |
-| La página se ve vieja | Recarga con `Ctrl+F5` |
+| La página se ve vieja o falta un botón | Reinicia el servidor (`Ctrl+C` y el comando del paso 3) y recarga con `Ctrl+F5` |
+
+## Otras guías
+- `RECALIBRACION.md`: humedad y luz con la maceta final.
+- `ENSAYO.md`: ensayo, presentación y plan B.
 
 ## Seguridad y respaldo
 - Usa `--red` solo en tu hotspot o red privada: sin código entra cualquiera de esa red, y la página propia de la maceta no tiene contraseña.
@@ -85,9 +94,13 @@ python -m venv .venv
 ```powershell
 cd ..\servidor; .venv\Scripts\python -m pytest -q
 ```
-Debe decir `54 passed`.
+Debe decir `59 passed`.
 
 ## Cambios en la forma de correrlo
 | Fecha | Cambio |
 |---|---|
 | 24-nov-2026 | Primera versión: servidor, simuladas, fotos y acceso desde el celular sin código |
+| 24-nov-2026 | Se agregan las guías `RECALIBRACION.md` y `ENSAYO.md`; los comandos no cambian |
+| 24-nov-2026 | Se agrega «Vaciar papelera» (solo en el PC); los comandos no cambian |
+| 24-nov-2026 | Borrado definitivo de una foto, de una maceta o de todas; tras actualizar hay que reiniciar el servidor |
+| 24-nov-2026 | «Abrir en el celular», «Papelera de fotos» y «Agregar maceta» pasan al menú lateral ☰ |

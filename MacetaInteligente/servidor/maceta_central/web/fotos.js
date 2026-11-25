@@ -16,7 +16,8 @@ function pintaFotos(){
  let mes='';
  $('album').innerHTML=fotos.slice().reverse().map(f=>{const m=new Date(f.capturada_en*1000).toLocaleDateString('es-CO',{month:'long',year:'numeric'}),t=m!=mes?'<h4>'+m+'</h4>':'';mes=m;
   return t+'<button type="button" data-f="'+f.id+'"><img loading="lazy" src="'+uF(f,'mini')+'" alt="Foto del '+fdia(f.capturada_en)+'"><span>'+fh(f.capturada_en)+(f.altura_cm!=null?'<br>'+num(f.altura_cm)+' cm':'')+'</span></button>'}).join('')||'<p class="et">'+(papelera?'La papelera está vacía.':$('fD').value||$('fH').value?'No hay fotos en esas fechas.':'Aún no hay fotos de esta maceta.')+'</p>';
- $('fCuenta').textContent=fotos.length+(fotos.length==1?' foto':' fotos')+(papelera?' en la papelera':'');
+ $('fCuenta').textContent=fotos.length+(fotos.length==1?' foto':' fotos')+(papelera?' en la papelera'+(document.body.classList.contains('remoto')?'. Para borrar definitivamente, usa el PC del servidor.':''):'');
+ $('fVac').hidden=!papelera||!fotos.length&&!$('fD').value&&!$('fH').value;
  const cmp=!papelera&&fotos.length>1;$('compara').hidden=!cmp;
  if(cmp){const va=$('cA1').value,vb=$('cB1').value,o=fotos.map(f=>'<option value="'+f.id+'">'+fh(f.capturada_en)+'</option>').join('');
   $('cA1').innerHTML=$('cB1').innerHTML=o;$('cA1').value=fotos.some(f=>f.id==va)?va:fotos[0].id;$('cB1').value=fotos.some(f=>f.id==vb)?vb:fotos[fotos.length-1].id;pintaComp()}
@@ -72,12 +73,39 @@ $('album').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;const f
  $('vImg').src=uF(f,'grande');$('vImg').alt='Foto del '+fdia(f.capturada_en);$('vT').textContent=fh(f.capturada_en)+', '+new Date(f.capturada_en*1000).getFullYear();
  const L=['Origen de la fecha: '+FUENTE[f.fuente_fecha]];if(f.altura_cm!=null)L.push('Altura (a mano): '+num(f.altura_cm)+' cm');if(f.hojas!=null)L.push('Hojas (a mano): '+f.hojas);if(f.nota)L.push('Nota: '+f.nota);
  L.push(c?'Condiciones '+(m&&m.origen=='simulado'?'simuladas':'medidas')+' cerca de la foto: humedad del suelo '+c.hum_pct+' %, nivel de luz '+c.luz_pct+' %, índice '+c.indice+'/100':'Sin lecturas de sensores cerca de esa hora');
- $('vTxt').innerHTML=L.map(x=>esc(x)).join('<br>');$('vDel').textContent=papelera?'Restaurar':'Enviar a la papelera';$('vMsg').textContent='';$('visor').showModal()};
+ $('vTxt').innerHTML=L.map(x=>esc(x)).join('<br>');$('vElim').hidden=!papelera;$('vDel').textContent=papelera?'Restaurar':'Enviar a la papelera';$('vMsg').textContent='';$('visor').showModal()};
 $('vNo').onclick=()=>$('visor').close();
 $('vDel').onclick=async()=>{const u='/api/v1/macetas/'+actual+'/fotos/'+fotoVer.id;
  try{await pide(u+(papelera?'/restaurar':''),{m:papelera?'POST':'DELETE'});$('visor').close();$('fMsg').textContent=papelera?'Foto restaurada.':'Foto enviada a la papelera.';cargaFotos()}catch(e){$('vMsg').textContent=e.message}};
 $('fPap').onclick=()=>{papelera=!papelera;$('fPap').textContent=papelera?'Volver a las fotos':'Ver papelera';$('fPap').setAttribute('aria-pressed',papelera);cargaFotos()};
+/* Borrado definitivo: una foto, una maceta o todas. Cuenta toda la papelera, aunque haya un filtro de fechas */
+let elimU='',elimMsg='fMsg';
+const nF=n=>n==1?'1 foto':n+' fotos',nomM=id=>{const m=macetas.find(x=>x.id==id);return m?m.nombre:'maceta'};
+function pideElim(t,txt,u,msg){elimU=u;elimMsg=msg;$('xT').textContent=t;$('xTxt').textContent=txt+' No se podrán recuperar.';$('xMsg').textContent='';$('xSi').disabled=false;$('vaciar').showModal()}
+async function vaciaUna(id,msg){
+ try{const n=(await pide('/api/v1/papelera'))[id]||0;
+  if(!n){$(msg).textContent='La papelera está vacía.';return}
+  pideElim('¿Vaciar la papelera?','Se borrarán para siempre '+nF(n)+' de «'+nomM(id)+'»'+(msg=='fMsg'&&($('fD').value||$('fH').value)?', también las que oculta el filtro de fechas':'')+'.','/api/v1/macetas/'+id+'/papelera?esperadas='+n,msg)}
+ catch(e){$(msg).textContent=e.message}
+}
+$('fVac').onclick=()=>vaciaUna(actual,'fMsg');
+$('vElim').onclick=()=>{$('visor').close();pideElim('¿Borrar esta foto?','Se borrará para siempre la foto del '+fh(fotoVer.capturada_en)+'.','/api/v1/macetas/'+actual+'/papelera/'+fotoVer.id,'fMsg');$('xTxt').textContent=$('xTxt').textContent.replace('podrán','podrá')};
+$('pTodo').onclick=async()=>{try{const p=Object.values(await pide('/api/v1/papelera')),n=p.reduce((a,b)=>a+b,0);
+ if(!n)return cargaPap();pideElim('¿Vaciar todas las papeleras?','Se borrarán para siempre '+nF(n)+' de '+(p.length==1?'1 maceta':p.length+' macetas')+', reales y simuladas.','/api/v1/papelera?esperadas='+n,'pMsg')}catch(e){$('pMsg').textContent=e.message}};
+$('pL').onclick=e=>{const b=e.target.closest('[data-p]');if(b)vaciaUna(b.dataset.p,'pMsg')};
+async function cargaPap(){
+ try{const p=Object.entries(await pide('/api/v1/papelera')),n=p.reduce((a,x)=>a+x[1],0);
+  $('pN').textContent='('+n+')';$('pTodo').hidden=!n;
+  $('pL').innerHTML=p.map(([id,k])=>'<div class="acc" style="align-items:center"><span>'+esc(nomM(id))+': '+nF(k)+'</span><button type="button" data-p="'+id+'">Vaciar</button></div>').join('')||'<p class="et">No hay fotos descartadas.</p>'}
+ catch(e){$('pN').textContent=''}
+}
+$('pap').ontoggle=()=>{if($('pap').open){$('pMsg').textContent='';cargaPap()}};addEventListener('hashchange',cargaPap);addEventListener('load',()=>setTimeout(cargaPap,500));
+$('xNo').onclick=()=>$('vaciar').close();
+$('xSi').onclick=async()=>{$('xSi').disabled=true;
+ try{const r=await pide(elimU,{m:'DELETE'});$('vaciar').close();
+  $(elimMsg).textContent=(r.borradas==1?'1 foto borrada.':r.borradas+' fotos borradas.')+(r.fallidas?' '+nF(r.fallidas)+' en la papelera: no se pudo borrar el archivo.':'');if(actual)cargaFotos();cargaPap()}
+ catch(e){$('xMsg').textContent=e.message;$('xSi').disabled=false}};
 $('fD').onchange=$('fH').onchange=cargaFotos;$('cA1').onchange=$('cB1').onchange=pintaComp;
 $('cX').oninput=()=>$('comp').style.setProperty('--x',$('cX').value+'%');
-function abreFotos(){fotos=[];papelera=false;$('fPap').textContent='Ver papelera';$('fPap').setAttribute('aria-pressed','false');$('fMsg').textContent=$('album').innerHTML='';$('compara').hidden=true;$('fD').value=$('fH').value=$('cA1').innerHTML=$('cB1').innerHTML='';
- for(const d of['visor','camara'])if($(d).open)$(d).close();cargaFotos()}
+function abreFotos(){fotos=[];papelera=false;$('fPap').textContent='Ver papelera';$('fPap').setAttribute('aria-pressed','false');$('fMsg').textContent=$('album').innerHTML='';$('compara').hidden=$('fVac').hidden=true;$('fD').value=$('fH').value=$('cA1').innerHTML=$('cB1').innerHTML='';
+ for(const d of['visor','camara','vaciar'])if($(d).open)$(d).close();cargaFotos()}

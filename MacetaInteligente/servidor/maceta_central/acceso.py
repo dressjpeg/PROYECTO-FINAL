@@ -83,7 +83,11 @@ class Acceso:
 
     def es_local(self, p):
         # El Host evita que una web externa apunte su dominio a este PC
-        return p.client.host in self.locales and p.url.hostname in ("127.0.0.1", "localhost", "::1")
+        if p.client.host in self.locales:
+            return p.url.hostname in ("127.0.0.1", "localhost", "::1")
+        # El mismo PC entrando por su IP de red: origen y destino de la conexión son iguales
+        ip = (p.scope.get("server") or ("",))[0]
+        return bool(self.locales) and p.client.host == ip == p.url.hostname
 
     def con_sesion(self, p):
         return self.sesiones.get(_sha(p.cookies.get(COOKIE, "")), 0) > time.time()

@@ -71,7 +71,7 @@ function pintaLista(){
   if(!e){e=crear(m);e.style.setProperty('--i',i);tarjetas.set(m.id,e);$('macetas').append(e)}
   e.hidden=filtro!='todas'&&m.origen!=filtro;if(!e.hidden)n++;actualizar(e,m)});
  $('vacio').hidden=n>0;
- $('vacio').textContent=filtro=='simulado'?'No hay macetas simuladas. Enciéndelas con: python -m simulador.demo':'No hay macetas registradas.';
+ $('vacio').textContent=filtro=='simulado'?'No hay macetas simuladas. Enciéndelas con: python -m simulador.demo':'No hay macetas registradas. Agrégalas en el menú ☰.';
 }
 $('verSim').onclick=e=>{const f=e.target.dataset.f;if(!f)return;filtro=f;$('verSim').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b==e.target));pintaLista()};
 
@@ -89,3 +89,10 @@ function pintaMedidas(m){
   q('em').textContent=x.e?(x.mal?'⚠ ':'✓ ')+x.e:'';q('.alerta').textContent=x.q?'⚠ '+x.q:'';q('.nota').textContent=x.nota||'';
   q('.tag').textContent=x.p;q('.tag').classList.toggle('sim',x.p=='Simulado')});
 }
+
+/* Menú lateral: se cierra con ✕, Escape, al tocar fuera o al cambiar de sección */
+$('menuB').onclick=()=>{$('menu').showModal();cargaAcceso();cargaPap()};
+$('menuX').onclick=()=>$('menu').close();
+$('menu').addEventListener('click',e=>{if(e.target==$('menu')&&e.clientX>$('menu').getBoundingClientRect().right)$('menu').close()});
+$('menu').addEventListener('close',()=>{for(const d of $('menu').querySelectorAll(':scope>details'))d.open=false});
+addEventListener('hashchange',()=>{if($('menu').open)$('menu').close()});

@@ -146,3 +146,59 @@ def test_muchas_fotos(srv):
                       [(f"f{i}", a, "x", 1, 1795000000 + i, "exif", "", None, None, 1, 1, 1, str(i)) for i in range(500)])
     t = time.monotonic()
     assert len(lista(c, a)) == 500 and time.monotonic() - t < 2
+
+
+def test_vaciar_papelera(srv):
+    c, b, a, otra, _ = srv
+    ids = [sube(c, a, jpg(x)).json()["id"] for x in ("red", "blue", "green")]
+    ajena = sube(c, otra, jpg()).json()["id"]
+    for m, f in ((a, ids[0]), (a, ids[1]), (otra, ajena)):
+        c.delete(f"/api/v1/macetas/{m}/fotos/{f}", headers=H)
+    u = f"/api/v1/macetas/{a}/papelera"
+    assert c.delete(u, params={"esperadas": 2}).status_code == 403
+    assert c.delete(u, headers=H).status_code == 422
+    assert c.delete(u, headers=H, params={"esperadas": 3}).status_code == 409     # cambió desde que se confirmó
+    assert len(lista(c, a, papelera=True)) == 2
+    assert c.delete(u, headers=H, params={"esperadas": 2}).json() == {"borradas": 2, "fallidas": 0}
+    assert lista(c, a, papelera=True) == [] and [f["id"] for f in lista(c, a)] == [ids[2]]
+    assert len(list((fotos.carpeta(b) / a).rglob("*.jpg"))) == 2                  # quedan las de la foto conservada
+    assert c.get(f"/api/v1/macetas/{a}/fotos/{ids[0]}/grande.jpg").status_code == 404
+    assert c.post(f"/api/v1/macetas/{a}/fotos/{ids[0]}/restaurar", headers=H).status_code == 404
+    assert len(lista(c, otra, papelera=True)) == 1                                # la otra maceta no se toca
+    assert c.delete(u, headers=H, params={"esperadas": 0}).json()["borradas"] == 0
+    assert c.delete("/api/v1/macetas/no-existe/papelera", headers=H, params={"esperadas": 0}).status_code == 404
+
+
+def test_vaciar_con_archivo_ocupado(srv, monkeypatch):
+    c, b, a, *_ = srv
+    fid = sube(c, a, jpg()).json()["id"]
+    c.delete(f"/api/v1/macetas/{a}/fotos/{fid}", headers=H)
+
+    def ocupado(*_, **__):
+        raise PermissionError
+    with monkeypatch.context() as m:
+        m.setattr(type(b.ruta), "unlink", ocupado)
+        r = c.delete(f"/api/v1/macetas/{a}/papelera", headers=H, params={"esperadas": 1})
+    assert r.json() == {"borradas": 0, "fallidas": 1} and len(lista(c, a, papelera=True)) == 1
+    assert c.delete(f"/api/v1/macetas/{a}/papelera", headers=H, params={"esperadas": 1}).json()["borradas"] == 1
+
+
+def test_borrar_una_y_vaciar_todo(srv):
+    c, b, a, otra, s = srv
+    x, y = (sube(c, a, jpg(k)).json()["id"] for k in ("red", "blue"))
+    z, v = sube(c, otra, jpg()).json()["id"], sube(c, s, jpg()).json()["id"]
+    u = f"/api/v1/macetas/{a}/papelera/{x}"
+    assert c.delete(u, headers=H).status_code == 404                              # no está en la papelera: no se borra
+    for m, f in ((a, x), (a, y), (otra, z), (s, v)):
+        c.delete(f"/api/v1/macetas/{m}/fotos/{f}", headers=H)
+    assert c.get("/api/v1/papelera").json() == {a: 2, otra: 1, s: 1}
+    assert c.delete(f"/api/v1/macetas/{otra}/papelera/{x}", headers=H).status_code == 404
+    assert c.delete(u).status_code == 403
+    assert c.delete(u, headers=H).json()["borradas"] == 1
+    assert [f["id"] for f in lista(c, a, papelera=True)] == [y]
+    viva = sube(c, a, jpg("pink")).json()["id"]
+    g = "/api/v1/papelera"
+    assert c.delete(g, params={"esperadas": 3}).status_code == 403
+    assert c.delete(g, headers=H, params={"esperadas": 2}).status_code == 409
+    assert c.delete(g, headers=H, params={"esperadas": 3}).json() == {"borradas": 3, "fallidas": 0}
+    assert c.get(g).json() == {} and [f["id"] for f in lista(c, a)] == [viva]

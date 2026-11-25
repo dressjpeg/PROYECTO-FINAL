@@ -4,7 +4,7 @@ Proyecto final de Adquisición de Datos (IUE). Un ESP32 mide la humedad del suel
 
 | Tipo de dato | Variables |
 |---|---|
-| Medido por sensor | Humedad y luz |
+| Medido por sensor | Humedad del suelo (sensor resistivo YL-69) y luz (LDR) |
 | Estimado por reglas | Índice de salud y estado |
 | Registrado a mano | Altura y número de hojas |
 
