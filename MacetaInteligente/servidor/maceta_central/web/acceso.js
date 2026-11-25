@@ -6,7 +6,7 @@ async function cargaAcceso(){
   document.body.classList.toggle('remoto',a.remoto);$('salir').hidden=!a.remoto||!a.con_codigo;$('celK').hidden=!a.con_codigo;$('celA').hidden=a.con_codigo;
   $('cel').hidden=!a.red||a.remoto;if($('cel').hidden)return;
   if(!a.codigo_vigente)celFin=0;
-  $('celU').textContent=a.url||'(este PC no está conectado a una red)';$('celH').textContent=a.huella;
+  $('celU').textContent=a.url||'';$('celD').hidden=!a.url;$('celP').textContent=a.url?'Abre la app en tu celular con este QR':'Conecta el PC a una red para mostrar el QR';$('celH').textContent=a.huella;if($('celQ').dataset.u!==(a.url||'')){$('celQ').dataset.u=a.url||'';$('celQ').innerHTML=a.url?qrSvg(a.url):''}
   $('celX').textContent='Cerrar todas las sesiones ('+a.sesiones+')';celPinta()}
  catch(e){$('cel').hidden=true}
 }

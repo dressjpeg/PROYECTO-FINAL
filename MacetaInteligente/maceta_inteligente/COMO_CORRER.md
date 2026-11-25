@@ -44,7 +44,7 @@ Para crear otra simulada: «Agregar maceta» → Origen **Maceta simulada** y el
 
 ### 5. Abre el dashboard
 - **PC:** `http://127.0.0.1:8000` (también sirve la dirección de red, pero solo desde el mismo PC del servidor tiene todos los controles)
-- **Celular:** en el PC abre el menú ☰ → «Abrir en el celular» y escribe en el celular esa dirección, con `http://`. No pide código.
+- **Celular:** en el PC abre el menú ☰ → «Abrir en el celular» y escanea el código QR con la cámara del celular (si no lo lee, despliega «¿No lee el QR?» y escribe la dirección, con `http://`). Debe estar en la misma red. No pide código.
 - **Si cambió la IP de la maceta:** en el PC, entra a la maceta → «Conexión» → «Cambiar dirección».
 
 ### Borrar una maceta desde el celular
@@ -125,3 +125,4 @@ Debe decir `69 passed`.
 | 25-nov-2026 | En el celular se desliza con el dedo en la biblioteca y en el modo presentación |
 | 25-nov-2026 | Cada maceta puede tener personaje (clásica o bonsái), al agregarla o en su detalle; hay que reiniciar el servidor |
 | 25-nov-2026 | Las simuladas creadas desde el formulario se encienden solas; hay que reiniciar el servidor |
+| 25-nov-2026 | Código QR en «Abrir en el celular»; basta recargar la página |

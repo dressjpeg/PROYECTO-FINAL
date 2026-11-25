@@ -32,7 +32,7 @@ Ensayo: 2 de diciembre de 2026. Congelar código y respaldo: 1 de diciembre. **P
 9. [ ] Escalabilidad: 1 real conectada. Las simuladas no cuentan
 
 ## 4. Prueba del celular y la foto
-1. [ ] En el PC abre el menú ☰ → «Abrir en el celular» y escribe en el celular esa dirección, con `http://`
+1. [ ] En el PC abre el menú ☰ → «Abrir en el celular» y escanea el QR con el celular (si no lo lee: «¿No lee el QR?»)
 2. [ ] Entra sin pedir código y con el menú ☰ (presentación y agregar) y el «+»; borrar una maceta pide un código que sale en el PC
 3. [ ] Maceta 1 → Fotos del crecimiento → Tomar foto, con la regla visible
 4. [ ] La foto aparece en el celular y en el PC
