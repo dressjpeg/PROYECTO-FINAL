@@ -93,7 +93,9 @@ def crear_app(*bases, consultar=True, acceso=None):
         return [acc.maceta_publica(m) for m in L] if acc.remoto(p) else L
 
     @app.post("/api/v1/macetas", status_code=201, dependencies=[Depends(permitido)])
-    def crear(n: NuevaMaceta):
+    def crear(n: NuevaMaceta, p: Request):
+        if acc.remoto(p):
+            acc.revisar_alta(n, sum(len(b.macetas()) for b in bases if b.tipo == "real"))
         tipo = n.origen or bases[0].tipo
         if tipo not in ings:
             raise HTTPException(400, f"Este servidor no admite macetas de tipo {tipo}")
@@ -124,14 +126,24 @@ def crear_app(*bases, consultar=True, acceso=None):
         return {"ok": True}
 
     @app.delete("/api/v1/macetas/{mid}", dependencies=[Depends(permitido)])
-    def borrar(mid: str, nombre: str = ""):
+    def borrar(mid: str, p: Request, nombre: str = "", x_autorizacion: str = Header("", max_length=20)):
         b, m = buscar(mid)
         # Con historial hay que escribir el nombre: evita borrar la maceta equivocada
         if (m["lecturas"] or fotos.hay(b, mid)) and nombre.strip() != m["nombre"]:
             raise HTTPException(409, "Escribe el nombre exacto de la maceta para borrarla")
+        if acc.remoto(p):
+            acceso.usar_permiso(p.client.host, mid, x_autorizacion)
         r = ings[b.tipo].borrar(mid)
         fotos.archivar(b, mid)
-        return {"ok": True, "respaldo": r}
+        return {"ok": True} if acc.remoto(p) else {"ok": True, "respaldo": r}
+
+    @app.post("/api/v1/macetas/{mid}/autorizacion", dependencies=[Depends(permitido)])
+    def autorizacion(mid: str, p: Request):
+        _, m = buscar(mid)
+        if not acc.remoto(p):
+            raise HTTPException(400, "En el PC no hace falta autorización")
+        acceso.pedir_permiso(p.client.host, mid, m["nombre"])
+        return {"segundos": acc.PERMISO_S}
 
     @app.get("/api/v1/macetas/{mid}/lecturas")
     def lecturas(mid: str, p: Request, desde: int = Query(0, ge=0, le=2**40), hasta: int | None = Query(None, ge=0, le=2**40),

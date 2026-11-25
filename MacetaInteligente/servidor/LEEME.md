@@ -16,7 +16,7 @@ Abre `http://127.0.0.1:8000`. Sin `--red` solo responde en este PC.
 ```
 Conecta el PC al hotspot del celular; en el PC, menú ☰ → «Abrir en el celular» muestra la dirección (`http://IP-del-PC:8000`). Ábrela en el celular: no pide código.
 
-Entra cualquiera que esté en esa red y la conexión no va cifrada, aparte del cifrado del WiFi: úsalo solo en tu hotspot o red privada, nunca en una WiFi pública. Desde la red solo se consulta y se manejan las fotos. No se entregan IP, identificadores del equipo, calibración, diagnóstico ni nombre de la red, y la API no se puede abrir a mano.
+Entra cualquiera que esté en esa red y la conexión no va cifrada, aparte del cifrado del WiFi: úsalo solo en tu hotspot o red privada, nunca en una WiFi pública. Desde la red solo se consulta, se manejan las fotos y se agregan macetas reales (por IP, sin puerto, hasta 20). Borrar una maceta exige un código de 6 dígitos que aparece en el dashboard abierto en el PC: un solo uso, 2 min, 3 errores lo anulan y solo sirve para ese equipo y esa maceta. No se entregan IP, identificadores del equipo, calibración, diagnóstico ni nombre de la red, y la API no se puede abrir a mano.
 
 Con `--red --codigo` se entra por HTTPS (puerto 8443) con un código de 8 dígitos que se crea en el PC: un solo uso, 10 min, guardado solo como hash scrypt en memoria; 5 errores bloquean ese equipo 5 min y 10 anulan el código. La sesión dura 12 h. El celular avisa que no conoce el certificado; compara su huella SHA-256 con la del PC. La clave privada queda en `%USERPROFILE%\.maceta_central`: no la compartas.
 

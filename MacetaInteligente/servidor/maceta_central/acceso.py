@@ -7,6 +7,7 @@ import ipaddress
 import re
 import secrets
 import socket
+import threading
 import time
 from urllib.parse import parse_qs
 
@@ -19,6 +20,10 @@ INTENTOS, BLOQUEO_S = 5, 300
 CODIGO_S, FALLOS_CODIGO = 600, 10   # vida del código y errores que lo anulan
 COOKIE = "maceta_sesion"
 FOTOS = re.compile(r"/api/v1/macetas/[^/]+/fotos(/[^/]+(/restaurar)?)?")
+ALTA, MAX_ALTA = "/api/v1/macetas", 20   # agregar desde el celular, hasta 20 macetas reales
+PERMISO_S, PERMISO_FALLOS, PERMISO_MAX = 120, 3, 5   # autorización para borrar: vida, errores y solicitudes por equipo
+BORRAR = re.compile(r"/api/v1/macetas/[^/]+")
+PEDIR = re.compile(r"/api/v1/macetas/[^/]+/autorizacion")
 NO = "Código incorrecto o vencido. Crea otro en el PC."
 CABECERAS = {
     "Content-Security-Policy": "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; "
@@ -65,6 +70,7 @@ class Acceso:
         self.con_codigo = con_codigo
         self.puerto, self.locales, self.huella_tls = puerto, locales, huella_tls
         self.clave, self.sesiones, self.fallos = None, {}, {}
+        self.permiso, self.pedidos, self.candado = None, {}, threading.Lock()
 
     def nuevo_codigo(self):
         """Se entrega una sola vez; aquí queda únicamente [sal, hash, vencimiento, errores]."""
@@ -80,6 +86,37 @@ class Acceso:
         ahora = time.time()
         self.sesiones = {k: v for k, v in self.sesiones.items() if v > ahora}
         return len(self.sesiones)
+
+    # ----- Autorización para borrar una maceta: el celular la pide y el código sale en el PC -----
+    def pendiente(self):
+        k = self.permiso
+        return k if k and k["vence"] > time.time() else None
+
+    def pedir_permiso(self, ip, mid, nombre):
+        ahora = time.time()
+        with self.candado:
+            k = self.pendiente()
+            if k and k["ip"] != ip:
+                raise HTTPException(409, "El PC ya está atendiendo otra solicitud. Espera 2 minutos")
+            self.pedidos = {i: t for i, v in self.pedidos.items() if (t := [x for x in v if x > ahora - 600])}
+            if len(self.pedidos.get(ip, [])) >= PERMISO_MAX:
+                raise HTTPException(429, "Demasiadas solicitudes. Espera 10 minutos")
+            self.pedidos.setdefault(ip, []).append(ahora)
+            self.permiso = {"ip": ip, "mid": mid, "nombre": nombre, "codigo": f"{secrets.randbelow(10**6):06d}",
+                            "vence": ahora + PERMISO_S, "fallos": 0}
+
+    def usar_permiso(self, ip, mid, dado):
+        with self.candado:
+            k = self.pendiente()
+            if not k or k["ip"] != ip or k["mid"] != mid:
+                raise HTTPException(403, "Pide antes la autorización; el código aparece en el PC")
+            if not hmac.compare_digest(re.sub(r"\s", "", dado).encode(), k["codigo"].encode()):
+                k["fallos"] += 1
+                if k["fallos"] >= PERMISO_FALLOS:
+                    self.permiso = None
+                    raise HTTPException(403, "Código incorrecto. Se anuló: pide otro")
+                raise HTTPException(403, "Código incorrecto")
+            self.permiso = None     # un solo uso
 
     def es_local(self, p):
         # El Host evita que una web externa apunte su dominio a este PC
@@ -151,13 +188,28 @@ class Acceso:
             r = JSONResponse({"ok": True})
             r.delete_cookie(COOKIE)
             return r
-        if p.method not in ("GET", "HEAD") and not FOTOS.fullmatch(ruta):
+        permitida = (p.method in ("GET", "HEAD") or FOTOS.fullmatch(ruta) or (p.method == "DELETE" and BORRAR.fullmatch(ruta))
+                     or (p.method == "POST" and (ruta == ALTA or PEDIR.fullmatch(ruta))))
+        if not permitida:
             return JSONResponse({"detail": "Esto solo se puede hacer desde el PC del servidor"}, 403)
         return await seguir(p)
 
 
 def remoto(p):
     return getattr(p.state, "remoto", False)
+
+
+def revisar_alta(n, registradas):
+    """Desde el celular: solo macetas reales, en el puerto web normal y nunca apuntando a este PC."""
+    h = n.url.removeprefix("http://")
+    try:
+        mal = ipaddress.ip_address(h).is_loopback or h == direccion_red()
+    except ValueError:
+        mal = not h.endswith(".local")      # localhost o con puerto
+    if n.origen == "simulado" or mal:
+        raise HTTPException(403, "Desde el celular solo se agregan macetas reales, por su IP y sin puerto")
+    if registradas >= MAX_ALTA:
+        raise HTTPException(403, "Hay demasiadas macetas. Agrégala desde el PC del servidor")
 
 
 def maceta_publica(m):
@@ -184,6 +236,10 @@ def registrar(app, acceso, permitido):
         if not acceso or not acceso.con_codigo or not acceso.es_local(p):
             raise HTTPException(403, "Esto solo se puede hacer desde el PC del servidor")
 
+    def local_red(p: Request):
+        if not acceso or not acceso.es_local(p):
+            raise HTTPException(403, "Esto solo se puede hacer desde el PC del servidor")
+
     @app.get("/api/v1/acceso")
     def estado(p: Request):
         if not acceso:
@@ -198,6 +254,19 @@ def registrar(app, acceso, permitido):
     @app.post("/api/v1/acceso/codigo", dependencies=[Depends(permitido), Depends(local)])
     def codigo():
         return {"codigo": acceso.nuevo_codigo(), "segundos": CODIGO_S}
+
+    @app.get("/api/v1/acceso/permiso", dependencies=[Depends(local_red)])
+    def permiso():
+        k = acceso.pendiente()
+        return {"permiso": k and {"maceta": k["nombre"], "codigo": k["codigo"], "equipo": k["ip"], "segundos": int(k["vence"] - time.time())}}
+
+    @app.delete("/api/v1/acceso/permiso", dependencies=[Depends(permitido), Depends(local_red)])
+    def rechazar():
+        with acceso.candado:
+            k, acceso.permiso = acceso.permiso, None
+            if k:       # quien fue rechazado espera 10 minutos
+                acceso.pedidos[k["ip"]] = [time.time()] * PERMISO_MAX
+        return {"ok": True}
 
     @app.post("/api/v1/acceso/cerrar", dependencies=[Depends(permitido), Depends(local)])
     def cerrar():

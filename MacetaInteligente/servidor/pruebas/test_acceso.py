@@ -60,7 +60,7 @@ def test_con_codigo_usa_fotos_pero_no_administra(srv):
     assert c.delete(f"{u}/{fid}", headers=H).status_code == 200
     assert c.post(f"{u}/{fid}/restaurar", headers=H).status_code == 200
     assert c.delete(f"/api/v1/macetas/{m}", headers=H, params={"nombre": "A"}).status_code == 403
-    assert c.post("/api/v1/macetas", headers=H, json={"nombre": "B", "url": "http://10.0.0.3"}).status_code == 403
+    assert c.post("/api/v1/macetas", json={"nombre": "B", "url": "http://10.0.0.3"}).status_code == 403
     assert c.patch(f"/api/v1/macetas/{m}/direccion", headers=H, json={"url": "http://10.0.0.3"}).status_code == 403
     assert c.put("/api/v1/capacidad", headers=H, json={"red": "x"}).status_code == 403
     for u in ("codigo", "cerrar"):
@@ -184,7 +184,7 @@ def test_red_abierta_sin_codigo(tmp_path):
     Image.new("RGB", (50, 50), "green").save(i, "JPEG")
     assert c.post(f"/api/v1/macetas/{m}/fotos", content=i.getvalue(), headers=H).status_code == 201
     assert c.delete(f"/api/v1/macetas/{m}", headers=H, params={"nombre": "A"}).status_code == 403
-    assert c.post("/api/v1/macetas", headers=H, json={"nombre": "B", "url": "http://10.0.0.3"}).status_code == 403
+    assert c.post("/api/v1/macetas", headers=H, json={"nombre": "B", "url": "http://10.0.0.3"}).status_code == 201
     assert cliente(host="sitio-externo.example").get("/api/v1/macetas", headers=H).status_code == 403
     assert cliente("10.0.0.9", "127.0.0.1:8000").delete(f"/api/v1/macetas/{m}", headers=H, params={"nombre": "A"}).status_code == 403
     pc = cliente("127.0.0.1", "127.0.0.1:8000")
@@ -219,3 +219,70 @@ def test_el_pc_por_su_ip_de_red_es_local(tmp_path):
     assert c.get("/api/v1/acceso", headers={**H, "Host": "10.0.0.9"}).json()["remoto"] is True
     c = TestClient(app, base_url="http://10.0.0.2:8000", client=("10.0.0.2", 5))
     assert c.get("/api/v1/acceso", headers={**H, "Host": "sitio-externo.example"}).status_code == 403
+
+
+def test_agregar_desde_el_celular(tmp_path, monkeypatch):
+    b, s = Base(tmp_path / "real.db"), Base(tmp_path / "simulado.db", "simulado")
+    app = crear_app(b, s, consultar=False, acceso=ac.Acceso(8000, con_codigo=False))
+    monkeypatch.setattr(ac, "direccion_red", lambda: "10.0.0.2")
+    c = TestClient(app, base_url="http://10.0.0.2:8000", client=("10.0.0.9", 5))
+
+    def alta(url, quien=c, **k):
+        return quien.post("/api/v1/macetas", headers=H, json={"nombre": "N", "url": url, **k}).status_code
+    for u in ("127.0.0.1", "http://localhost", "10.0.0.2", "10.0.0.5:22", "http://127.0.0.9:8101"):
+        assert alta(u) == 403, u
+    assert alta("8.8.8.8") == 422 and alta("10.0.0.6", origen="simulado") == 403
+    assert alta("10.0.0.6") == 201 and alta("maceta.local", origen="real") == 201 and alta("10.0.0.6") == 409
+    assert len(b.macetas()) == 2 and s.macetas() == []
+    monkeypatch.setattr(ac, "MAX_ALTA", 2)
+    assert alta("10.0.0.7") == 403
+    pc = TestClient(app, base_url="http://127.0.0.1:8000", client=("127.0.0.1", 5))
+    assert alta("127.0.0.1:8101", pc, origen="simulado") == 201 and alta("10.0.0.7", pc) == 201
+    mid = b.macetas()[0]["id"]
+    assert c.delete(f"/api/v1/macetas/{mid}", headers=H, params={"nombre": "N"}).status_code == 403
+
+
+def test_borrar_desde_el_celular_con_codigo_del_pc(tmp_path):
+    b = Base(tmp_path / "real.db")
+    a = ac.Acceso(8000, con_codigo=False)
+    app = crear_app(b, consultar=False, acceso=a)
+    x, y = b.crear_maceta("A", "http://10.0.0.1"), b.crear_maceta("B", "http://10.0.0.3")
+
+    def cli(ip, host="10.0.0.2"):
+        return TestClient(app, base_url=f"http://{host}:8000", client=(ip, 5))
+    c, otro, pc = cli("10.0.0.9"), cli("10.0.0.8"), cli("127.0.0.1", "127.0.0.1")
+
+    def pedir(m=x, quien=c):
+        return quien.post(f"/api/v1/macetas/{m}/autorizacion", headers=H)
+
+    def borrar(cod, m=x, quien=c):
+        return quien.delete(f"/api/v1/macetas/{m}", headers={**H, "X-Autorizacion": cod}).status_code
+
+    def codigo():
+        k = pc.get("/api/v1/acceso/permiso").json()["permiso"]
+        return k and k["codigo"]
+    assert borrar("000000") == 403 and codigo() is None
+    r = pedir()
+    cod = codigo()
+    assert r.status_code == 200 and cod not in r.text
+    assert c.get("/api/v1/acceso/permiso", headers=H).status_code == 403          # el celular no puede leerlo
+    assert c.delete("/api/v1/acceso/permiso", headers=H).status_code == 403
+    assert pedir(quien=otro).status_code == 409
+    assert borrar(cod, quien=otro) == 403 and borrar(cod, m=y) == 403             # atado al equipo y a la maceta
+    mal = f"{(int(cod) + 1) % 10**6:06d}"
+    assert borrar(mal) == 403 and borrar(cod[:3] + " " + cod[3:]) == 200          # admite espacios
+    assert [m["id"] for m in b.macetas()] == [y] and list((tmp_path / "respaldos").glob("*.db"))
+    pedir(y)
+    cod = codigo()
+    assert [borrar(f"{(int(cod) + i) % 10**6:06d}", m=y) for i in (1, 2, 3)] == [403] * 3
+    assert codigo() is None and borrar(cod, m=y) == 403                           # 3 errores lo anulan
+    pedir(y)
+    cod = codigo()
+    a.permiso["vence"] = 1
+    assert borrar(cod, m=y) == 403                                                # vencido
+    pedir(y)
+    cod = codigo()
+    assert pc.delete("/api/v1/acceso/permiso").status_code == 403
+    assert pc.delete("/api/v1/acceso/permiso", headers=H).status_code == 200
+    assert borrar(cod, m=y) == 403 and pedir(y).status_code == 429                # rechazado: debe esperar
+    assert len(b.macetas()) == 1 and borrar("", m=y, quien=pc) == 200             # el PC sigue sin código

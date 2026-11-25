@@ -8,7 +8,7 @@ let macetas=[],tipos=[],actual=null,vista='lista',det=null,rango=86400,nHist=0,n
 async function pide(u,o={}){
  const c=new AbortController(),t=setTimeout(()=>c.abort(),15000);
  try{
-  const r=await fetch(u,{method:o.m||'GET',signal:c.signal,headers:o.m?{'X-Maceta':'1','Content-Type':'application/json'}:{'X-Maceta':'1'},body:o.b&&JSON.stringify(o.b)}),j=await r.json();
+  const r=await fetch(u,{method:o.m||'GET',signal:c.signal,headers:o.m?{'X-Maceta':'1','Content-Type':'application/json',...o.h}:{'X-Maceta':'1'},body:o.b&&JSON.stringify(o.b)}),j=await r.json();
   if(r.status==401)location.href='/entrar';
   if(!r.ok)throw new Error(typeof j.detail=='string'?j.detail:Array.isArray(j.detail)?j.detail.map(d=>d.msg.replace('Value error, ','')).join('. '):'Error '+r.status);
   return j;
@@ -68,11 +68,11 @@ async function cargaHist(){
 }
 
 function ruta(){
- const m=/^#m\/([\w-]+)$/.exec(location.hash);actual=m?m[1]:null;vista=actual?'det':location.hash=='#cap'?'cap':'lista';det=null;nHist++;capCfg=false;
- $('lista').hidden=vista!='lista';$('capacidad').hidden=vista!='cap';[['navM','lista'],['navC','cap']].forEach(([i,v])=>v==vista?$(i).setAttribute('aria-current','page'):$(i).removeAttribute('aria-current'));$('detalle').hidden=!actual;scrollTo(0,0);
- if(actual){limpiaGraficas();$('hMsg').textContent='Cargando…';$('dirMsg').textContent='';const x=macetas.find(q=>q.id==actual);$('dU').value=x?x.url:'';pintaDetalle();cargaHist();abreFotos()}else vista=='cap'?pintaCap():pintaLista();
+ const m=/^#m\/([\w-]+)$/.exec(location.hash);actual=m?m[1]:null;vista=actual?'det':location.hash=='#cap'?'cap':location.hash=='#biblioteca'?'bib':'lista';det=null;nHist++;capCfg=false;
+ $('lista').hidden=vista!='lista';$('capacidad').hidden=vista!='cap';$('biblioteca').hidden=vista!='bib';[['navM','lista'],['navC','cap']].forEach(([i,v])=>v==vista?$(i).setAttribute('aria-current','page'):$(i).removeAttribute('aria-current'));$('detalle').hidden=!actual;scrollTo(0,0);
+ if(actual){limpiaGraficas();$('hMsg').textContent='Cargando…';$('dirMsg').textContent='';const x=macetas.find(q=>q.id==actual);$('dU').value=x?x.url:'';pintaDetalle();cargaHist();abreFotos()}else vista=='cap'?pintaCap():vista=='bib'?cargaBib():pintaLista();
 }
-const pinta=()=>vista=='det'?pintaDetalle():vista=='cap'?pintaCap():pintaLista();
+const pinta=()=>vista=='det'?pintaDetalle():vista=='cap'?pintaCap():vista=='bib'?0:pintaLista();
 async function refresca(){
  const mio=++nCiclo,[s,m]=await Promise.all([pide('/api/v1/salud'),pide('/api/v1/macetas')]);if(mio!=nCiclo)return;
  const primera=!tipos.length;tipos=s.tipos;macetas=m;$('con').textContent='Servidor en línea';$('con').className='';

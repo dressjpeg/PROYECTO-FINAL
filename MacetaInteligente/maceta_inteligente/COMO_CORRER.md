@@ -1,6 +1,6 @@
 # Cómo correr la maceta inteligente
 
-Última actualización: 24 de noviembre de 2026.
+Última actualización: 25 de noviembre de 2026.
 
 ## Las tres partes
 | Parte | Qué es | Dónde se abre |
@@ -45,14 +45,22 @@ Teclas `1` a `4` y Enter: apagan o encienden una. `s` y Enter: salir. Al iniciar
 - **Celular:** en el PC abre el menú ☰ → «Abrir en el celular» y escribe en el celular esa dirección, con `http://`. No pide código.
 - **Si cambió la IP de la maceta:** en el PC, entra a la maceta → «Conexión» → «Cambiar dirección».
 
+### Borrar una maceta desde el celular
+Icono de papelera de la maceta → «Pedir código al PC». El código aparece 2 min en el dashboard, que debe estar **abierto en el PC**; escríbelo en el celular. En el PC no pide código y puedes «Rechazar» la solicitud.
+
+### Proyectar
+En el PC, menú ☰ → «Modo presentación»: una maceta a pantalla completa. Flechas ← → para cambiar (en el celular, desliza con el dedo), «Rotar cada 10 s» para que pase sola y «Salir» (o Escape) para volver.
+
 ### Para cerrar
 `Ctrl+C` en la ventana del servidor y `s` en la de las simuladas. No se pierde lo guardado.
 
 ## Tomar la foto
 Maceta → «Fotos del crecimiento» → «Tomar foto» o «Subir fotos». Usa siempre el mismo ángulo y deja la regla visible. Se aceptan JPG, PNG y WebP de hasta 12 MB; las HEIC de iPhone se convierten antes a JPG.
 
+«▶ Timelapse» reproduce en orden las fotos de la maceta (hacen falta dos o más); respeta el filtro de fechas y también funciona en el celular.
+
 Para liberar espacio, **en el PC**: borra para siempre fotos descartadas. Desde el celular no se puede.
-- **Una foto:** maceta → «Ver papelera» → abre la foto → «Borrar para siempre».
+- **Una foto:** maceta → «Ver papelera» → icono de papelera de la foto (fuera de la papelera, ese icono solo la descarta).
 - **Una maceta:** «Ver papelera» → «Vaciar papelera».
 - **Todas:** menú ☰ → «Papelera de fotos» → «Vaciar todas las papeleras».
 
@@ -94,7 +102,7 @@ python -m venv .venv
 ```powershell
 cd ..\servidor; .venv\Scripts\python -m pytest -q
 ```
-Debe decir `59 passed`.
+Debe decir `61 passed`.
 
 ## Cambios en la forma de correrlo
 | Fecha | Cambio |
@@ -104,3 +112,12 @@ Debe decir `59 passed`.
 | 24-nov-2026 | Se agrega «Vaciar papelera» (solo en el PC); los comandos no cambian |
 | 24-nov-2026 | Borrado definitivo de una foto, de una maceta o de todas; tras actualizar hay que reiniciar el servidor |
 | 24-nov-2026 | «Abrir en el celular», «Papelera de fotos» y «Agregar maceta» pasan al menú lateral ☰ |
+| 24-nov-2026 | Se agrega el timelapse de fotos; los comandos no cambian |
+| 24-nov-2026 | Cada foto tiene un icono para descartarla sin abrirla; los comandos no cambian |
+| 24-nov-2026 | Se agrega el modo presentación; los comandos no cambian |
+| 24-nov-2026 | «Agregar maceta» también está en la barra superior |
+| 24-nov-2026 | Desde el celular se pueden agregar macetas reales con «+»; hay que reiniciar el servidor |
+| 25-nov-2026 | Borrar macetas desde el celular con código del PC; hay que reiniciar el servidor |
+| 25-nov-2026 | El menú ☰ también aparece en el celular, sin las opciones del PC |
+| 25-nov-2026 | Menú ☰ → «Biblioteca de fotos»: todas las fotos por planta, en PC y celular; los comandos no cambian |
+| 25-nov-2026 | En el celular se desliza con el dedo en la biblioteca y en el modo presentación |
